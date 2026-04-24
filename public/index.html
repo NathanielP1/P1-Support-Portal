@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Podium 1 Racing — Support Portal</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --blk: #111111; --red: #CC1122; --rdk: #990D1A;
+      --crm: #F5F0E8; --crmd: #EDE7DB;
+      --bdr: #E0D8CC; --txt: #1A1A1A; --mut: #666666;
+      --wht: #FFFFFF; --grn: #2A8C4A; --gnbg: #EBF7EE;
+      --warn-bg: #FFF8E6; --warn-br: #D4850A;
+    }
+    body { font-family: Arial, sans-serif; background: var(--crm); min-height: 100vh; }
+
+    /* ── LOGIN ── */
+    #loginScreen {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; background: var(--blk);
+    }
+    .login-card { width: 380px; background: var(--crm); border-radius: 12px; overflow: hidden; }
+    .login-top { background: var(--blk); padding: 28px 32px 24px; border-bottom: 3px solid var(--red); }
+    .login-logo { font-size: 22px; font-weight: 900; font-style: italic; color: var(--wht); margin-bottom: 4px; }
+    .login-logo span { color: var(--red); }
+    .login-subtitle { font-size: 12px; color: #666; }
+    .login-body { padding: 28px 32px; }
+    .login-h { font-size: 17px; font-weight: 700; color: var(--txt); margin-bottom: 3px; }
+    .login-hint { font-size: 12px; color: var(--mut); margin-bottom: 22px; }
+    .login-err { background: #FEF0F0; border-left: 3px solid var(--red); padding: 8px 12px; border-radius: 0 4px 4px 0; font-size: 12px; color: #7A0010; margin-bottom: 16px; display: none; }
+    label { display: block; font-size: 10px; font-weight: 700; color: var(--mut); margin-bottom: 4px; text-transform: uppercase; letter-spacing: .05em; }
+    .finput { width: 100%; padding: 10px 12px; border: 1px solid var(--bdr); border-radius: 7px; font-size: 13px; background: var(--wht); color: var(--txt); outline: none; font-family: Arial, sans-serif; margin-bottom: 14px; }
+    .finput:focus { border-color: var(--red); }
+    .login-btn { width: 100%; padding: 12px; background: var(--red); color: #fff; border: 2px solid #FF3344; border-radius: 7px; font-size: 14px; font-weight: 900; letter-spacing: .03em; cursor: pointer; font-family: Arial, sans-serif; text-shadow: 0 1px 3px rgba(0,0,0,.5); }
+    .login-btn:hover { background: var(--rdk); }
+    .login-foot { padding: 14px 32px; background: var(--crmd); border-top: 1px solid var(--bdr); text-align: center; font-size: 11px; color: var(--mut); }
+    .login-foot a { color: var(--red); text-decoration: none; }
+
+    /* ── PORTAL ── */
+    #portalScreen { display: none; min-height: 100vh; background: var(--crm); }
+
+    /* NAV */
+    .nav { background: var(--blk); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; height: 52px; position: sticky; top: 0; z-index: 100; }
+    .nav-logo { display: flex; align-items: center; gap: 10px; }
+    .nav-wordmark { font-size: 14px; font-weight: 900; font-style: italic; color: var(--wht); }
+    .nav-wordmark span { color: var(--red); }
+    .nav-sep { width: 1px; height: 18px; background: #333; }
+    .nav-lbl { font-size: 11px; color: #555; letter-spacing: .04em; }
+    .nav-tabs { display: flex; gap: 4px; }
+    .nav-tab { font-size: 12px; color: #777; cursor: pointer; padding: 6px 14px; border-radius: 6px; transition: all .15s; background: none; border: none; font-family: Arial, sans-serif; }
+    .nav-tab:hover { color: #ccc; background: rgba(255,255,255,.05); }
+    .nav-tab.active { color: var(--wht); background: rgba(204,17,34,.2); }
+    .nav-user { display: flex; align-items: center; gap: 8px; }
+    .nav-av { width: 28px; height: 28px; border-radius: 50%; background: var(--red); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #fff; }
+    .nav-nm { font-size: 12px; color: #aaa; }
+    .nav-so { font-size: 11px; color: #555; cursor: pointer; padding: 3px 8px; border: .5px solid #333; border-radius: 4px; }
+    .nav-so:hover { color: #aaa; }
+
+    /* PAGES */
+    .page { display: none; padding: 24px; max-width: 1100px; margin: 0 auto; }
+    .page.active { display: block; }
+
+    /* RUFUS */
+    .rufus-grid { display: grid; grid-template-columns: 240px 1fr; gap: 20px; align-items: start; }
+    .rig-card { background: var(--wht); border-radius: 10px; border: 1px solid var(--bdr); overflow: hidden; margin-bottom: 12px; }
+    .rig-hd { background: var(--blk); padding: 13px 16px; }
+    .rig-lbl { font-size: 9px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px; }
+    .rig-nm { font-size: 13px; font-weight: 700; color: var(--wht); }
+    .rig-body { padding: 12px 14px; }
+    .rig-field { padding: 6px 0; border-bottom: .5px solid var(--bdr); display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+    .rig-field:last-child { border-bottom: none; }
+    .rig-fl { font-size: 10px; color: var(--mut); }
+    .rig-fv { font-size: 10px; font-weight: 700; color: var(--txt); text-align: right; }
+    .rig-badge { display: inline-block; padding: 1px 6px; border-radius: 8px; font-size: 9px; font-weight: 700; background: #FEF0F0; color: var(--red); }
+    .esc-card { background: var(--wht); border-radius: 9px; border: 1px solid var(--bdr); padding: 12px 14px; }
+    .esc-lbl { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: #888; margin-bottom: 7px; }
+    .esc-txt { font-size: 11px; color: #555; line-height: 1.55; margin-bottom: 6px; }
+    .esc-email { font-size: 12px; color: var(--red); font-weight: 700; }
+
+    .chat-panel { background: var(--wht); border-radius: 10px; border: 1px solid var(--bdr); overflow: hidden; }
+    .chat-hd { background: var(--blk); padding: 13px 18px; display: flex; align-items: center; gap: 10px; }
+    .rufus-av { width: 34px; height: 34px; border-radius: 50%; background: var(--red); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 900; color: #fff; font-style: italic; flex-shrink: 0; }
+    .chat-hd-name { font-size: 13px; font-weight: 700; color: var(--wht); }
+    .chat-hd-status { font-size: 11px; color: #888; display: flex; align-items: center; gap: 5px; margin-top: 2px; }
+    .sdot { width: 6px; height: 6px; border-radius: 50%; background: var(--grn); }
+    .chat-msgs { padding: 16px; min-height: 300px; max-height: 380px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background: #FAFAF8; }
+    .msg { display: flex; gap: 8px; align-items: flex-start; }
+    .msg.u { flex-direction: row-reverse; }
+    .mav { width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; }
+    .mav.r { background: var(--red); color: #fff; font-style: italic; font-size: 10px; }
+    .mav.u { background: var(--blk); color: #fff; }
+    .bub { max-width: 76%; padding: 9px 13px; border-radius: 10px; font-size: 12px; line-height: 1.6; }
+    .bub.r { background: var(--wht); color: var(--txt); border: .5px solid var(--bdr); border-top-left-radius: 2px; }
+    .bub.u { background: var(--blk); color: #fff; border-top-right-radius: 2px; }
+    .bub b { font-weight: 700; }
+    .bub .sc { background: var(--crm); border-left: 2px solid #999; padding: 5px 9px; margin: 5px 0; font-style: italic; font-size: 11px; color: #444; border-radius: 0 3px 3px 0; }
+    .bub .wn { background: var(--warn-bg); border-left: 2px solid var(--warn-br); padding: 5px 9px; margin: 5px 0; font-size: 11px; color: #333; border-radius: 0 3px 3px 0; }
+    .tdots { display: flex; gap: 3px; padding: 9px 13px; background: var(--wht); border: .5px solid var(--bdr); border-radius: 10px; border-top-left-radius: 2px; }
+    .tdots span { width: 5px; height: 5px; background: #aaa; border-radius: 50%; animation: bl 1.2s infinite; }
+    .tdots span:nth-child(2) { animation-delay: .2s; }
+    .tdots span:nth-child(3) { animation-delay: .4s; }
+    @keyframes bl { 0%,80%,100%{opacity:.2} 40%{opacity:1} }
+    .chat-sugs { padding: 10px 16px; background: #FAFAF8; border-top: .5px solid var(--bdr); display: flex; gap: 7px; flex-wrap: wrap; }
+    .sg { font-size: 11px; padding: 4px 10px; border-radius: 12px; border: .5px solid var(--bdr); background: #fff; color: #444; cursor: pointer; transition: all .15s; }
+    .sg:hover { border-color: var(--red); color: var(--red); }
+    .chat-in-row { display: flex; gap: 8px; padding: 12px 16px; border-top: .5px solid var(--bdr); background: var(--wht); }
+    .chat-in { flex: 1; padding: 9px 12px; border: 1px solid var(--bdr); border-radius: 7px; font-size: 12px; background: #fff; color: var(--txt); outline: none; font-family: Arial, sans-serif; resize: none; }
+    .chat-in:focus { border-color: var(--red); }
+    .send-btn { width: 34px; height: 34px; background: var(--red); border: none; border-radius: 7px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .send-btn:hover { background: var(--rdk); }
+    .send-btn svg { width: 14px; height: 14px; fill: #fff; }
+    .send-btn:disabled { background: #ccc; cursor: not-allowed; }
+
+    /* KB */
+    .kb-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; flex-wrap: wrap; gap: 10px; }
+    .kb-h { font-size: 17px; font-weight: 700; color: var(--txt); }
+    .srch-wrap { position: relative; }
+    .srch-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 13px; height: 13px; color: #999; }
+    .srch-in { padding: 8px 12px 8px 30px; border: 1px solid var(--bdr); border-radius: 7px; font-size: 12px; background: #fff; color: var(--txt); outline: none; width: 210px; font-family: Arial, sans-serif; }
+    .srch-in:focus { border-color: var(--red); }
+    .pills { display: flex; gap: 7px; margin-bottom: 18px; flex-wrap: wrap; }
+    .pill { font-size: 11px; padding: 5px 13px; border-radius: 12px; border: .5px solid var(--bdr); background: #fff; color: #555; cursor: pointer; transition: all .15s; }
+    .pill.on { background: var(--blk); color: #fff; border-color: var(--blk); }
+    .pill:hover:not(.on) { border-color: var(--red); color: var(--red); }
+    .kb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
+    .kb-card { background: #fff; border-radius: 9px; border: 1px solid var(--bdr); padding: 14px; cursor: pointer; transition: border-color .15s; }
+    .kb-card:hover { border-color: var(--red); }
+    .kb-cat { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 5px; }
+    .kb-cat.screens { color: #185FA5; }
+    .kb-cat.sound { color: #2A8C4A; }
+    .kb-cat.motion { color: #854F0B; }
+    .kb-card-t { font-size: 12px; font-weight: 700; color: var(--txt); margin-bottom: 4px; line-height: 1.35; }
+    .kb-card-d { font-size: 11px; color: var(--mut); line-height: 1.45; }
+    .kb-card-ft { margin-top: 10px; display: flex; align-items: center; justify-content: space-between; }
+    .diff { font-size: 10px; padding: 2px 7px; border-radius: 8px; }
+    .diff.beginner { background: #EBF7EE; color: #1A5C2A; }
+    .diff.intermediate { background: #FFF8E6; color: #633806; }
+    .diff.reference { background: #E6F1FB; color: #042C53; }
+
+    /* ARTICLE OVERLAY */
+    #artOverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200; padding: 20px; overflow-y: auto; }
+    .art-modal { background: #fff; border-radius: 10px; max-width: 680px; margin: 0 auto; overflow: hidden; }
+    .art-hd { background: var(--crm); padding: 16px 20px; border-bottom: 1px solid var(--bdr); display: flex; align-items: center; justify-content: space-between; }
+    .art-cat { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--mut); margin-bottom: 3px; }
+    .art-title { font-size: 15px; font-weight: 700; color: var(--txt); }
+    .art-close { width: 28px; height: 28px; border-radius: 6px; border: .5px solid var(--bdr); background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #888; flex-shrink: 0; }
+    .art-close:hover { background: var(--crm); }
+    .art-meta { display: flex; gap: 16px; padding: 11px 20px; background: var(--crmd); border-bottom: 1px solid var(--bdr); }
+    .art-mi { font-size: 10px; color: var(--mut); }
+    .art-mi b { color: var(--txt); display: block; font-size: 11px; margin-top: 1px; }
+    .art-body { padding: 20px; font-size: 13px; color: var(--txt); line-height: 1.7; max-height: 60vh; overflow-y: auto; }
+    .art-body h3 { font-size: 14px; font-weight: 700; color: var(--blk); margin: 16px 0 6px; padding-bottom: 3px; border-bottom: 2px solid var(--red); }
+    .art-body h3:first-child { margin-top: 0; }
+    .art-body ol, .art-body ul { padding-left: 20px; margin: 7px 0; }
+    .art-body li { margin-bottom: 5px; }
+    .art-body .sc { background: var(--crm); border-left: 3px solid #999; padding: 6px 10px; margin: 7px 0; font-style: italic; font-size: 12px; color: #444; border-radius: 0 4px 4px 0; }
+    .art-body .wb { background: var(--warn-bg); border-left: 3px solid var(--warn-br); padding: 6px 10px; margin: 7px 0; font-size: 12px; color: #333; border-radius: 0 4px 4px 0; }
+    .art-foot { padding: 12px 20px; border-top: 1px solid var(--bdr); background: var(--blk); display: flex; align-items: center; justify-content: space-between; }
+    .art-foot-t { font-size: 11px; color: #777; }
+    .dl-btn { font-size: 11px; padding: 5px 12px; background: var(--red); color: #fff; border: none; border-radius: 5px; cursor: pointer; font-family: Arial, sans-serif; }
+
+    /* TICKET */
+    .tkt-wrap { max-width: 540px; }
+    .tkt-h { font-size: 17px; font-weight: 700; color: var(--txt); margin-bottom: 4px; }
+    .tkt-sub { font-size: 13px; color: var(--mut); margin-bottom: 20px; }
+    .tkt-card { background: #fff; border-radius: 10px; border: 1px solid var(--bdr); padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+    .tkt-sel { width: 100%; padding: 9px 12px; border: 1px solid var(--bdr); border-radius: 7px; font-size: 13px; background: #fff; color: var(--txt); font-family: Arial, sans-serif; outline: none; }
+    .tkt-ta { width: 100%; padding: 9px 12px; border: 1px solid var(--bdr); border-radius: 7px; font-size: 13px; background: #fff; color: var(--txt); font-family: Arial, sans-serif; outline: none; resize: vertical; min-height: 100px; line-height: 1.6; }
+    .tkt-rig { background: var(--crm); border-radius: 7px; padding: 12px 14px; }
+    .tkt-rig-l { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--mut); margin-bottom: 8px; }
+    .tkt-sub-btn { padding: 12px; background: var(--blk); color: #fff; border: 2px solid #444; border-radius: 7px; font-size: 13px; font-weight: 900; letter-spacing: .03em; cursor: pointer; font-family: Arial, sans-serif; text-shadow: 0 1px 2px rgba(0,0,0,.4); }
+    .tkt-sub-btn:hover { background: #333; }
+    .tkt-ok { display: none; margin-top: 16px; background: var(--gnbg); border-left: 3px solid var(--grn); padding: 12px 16px; border-radius: 0 8px 8px 0; }
+  </style>
+</head>
+<body>
+
+<!-- ══ LOGIN ══ -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-top">
+      <div class="login-logo">PODIUM<span>1</span> Racing</div>
+      <div class="login-subtitle">Customer Support Portal</div>
+    </div>
+    <div class="login-body">
+      <div class="login-h">Welcome back</div>
+      <div class="login-hint">Sign in with the credentials provided by your P1 team</div>
+      <div class="login-err" id="loginErr">Incorrect email or password. Please try again.</div>
+      <label for="emailIn">Email address</label>
+      <input class="finput" type="email" id="emailIn" placeholder="your@email.com" />
+      <label for="passIn">Password</label>
+      <input class="finput" type="password" id="passIn" placeholder="••••••••" style="margin-bottom:0"
+        onkeydown="if(event.key==='Enter')doLogin()" />
+      <br/><br/>
+      <button class="login-btn" onclick="doLogin()" id="loginBtn">Sign in to support portal</button>
+    </div>
+    <div class="login-foot">
+      Need access? Contact <a href="mailto:nathaniel@podium1racing.com">nathaniel@podium1racing.com</a>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PORTAL ══ -->
+<div id="portalScreen">
+  <nav class="nav">
+    <div class="nav-logo">
+      <div class="nav-wordmark">PODIUM<span>1</span></div>
+      <div class="nav-sep"></div>
+      <div class="nav-lbl">Support Portal</div>
+    </div>
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="goTo(0)">Ask Rufus</button>
+      <button class="nav-tab" onclick="goTo(1)">Knowledge Base</button>
+      <button class="nav-tab" onclick="goTo(2)">Support Request</button>
+    </div>
+    <div class="nav-user">
+      <div class="nav-av" id="navAv"></div>
+      <div class="nav-nm" id="navNm"></div>
+      <div class="nav-so" onclick="doLogout()">Sign out</div>
+    </div>
+  </nav>
+
+  <!-- PAGE 0: RUFUS -->
+  <div class="page active" id="pg0">
+    <div class="rufus-grid">
+      <div>
+        <div class="rig-card">
+          <div class="rig-hd">
+            <div class="rig-lbl">Your simulator</div>
+            <div class="rig-nm" id="rigName"></div>
+          </div>
+          <div class="rig-body" id="rigFields"></div>
+        </div>
+        <div class="esc-card">
+          <div class="esc-lbl">Need a human?</div>
+          <div class="esc-txt">If Rufus can't resolve your issue, reach out and Nathaniel will get back to you.</div>
+          <div class="esc-email">nathaniel@podium1racing.com</div>
+        </div>
+      </div>
+      <div class="chat-panel">
+        <div class="chat-hd">
+          <div class="rufus-av">R</div>
+          <div>
+            <div class="chat-hd-name">Rufus</div>
+            <div class="chat-hd-status"><div class="sdot"></div>P1 support specialist — online now</div>
+          </div>
+        </div>
+        <div class="chat-msgs" id="chatMsgs"></div>
+        <div class="chat-sugs" id="chatSugs">
+          <div class="sg" onclick="qs('My screens are only showing on one monitor')">Screens on one monitor</div>
+          <div class="sg" onclick="qs('My motion platform is not moving')">Motion not moving</div>
+          <div class="sg" onclick="qs('No sound in my sim')">No sound</div>
+          <div class="sg" onclick="qs('ACC keeps crashing')">ACC crashing</div>
+          <div class="sg" onclick="qs('My wheel is cutting out mid corner')">Wheel cutting out</div>
+        </div>
+        <div class="chat-in-row">
+          <textarea class="chat-in" id="chatIn" rows="1"
+            placeholder="Ask Rufus anything about your simulator..."
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();doSend()}"
+            oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,80)+'px'"></textarea>
+          <button class="send-btn" id="sendBtn" onclick="doSend()">
+            <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE 1: KB -->
+  <div class="page" id="pg1">
+    <div class="kb-top">
+      <div class="kb-h">Knowledge Base</div>
+      <div class="srch-wrap">
+        <svg class="srch-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="6.5" cy="6.5" r="4"/><line x1="10" y1="10" x2="14" y2="14"/>
+        </svg>
+        <input class="srch-in" id="kbSrch" placeholder="Search articles..." oninput="drawKB()" />
+      </div>
+    </div>
+    <div class="pills">
+      <div class="pill on" onclick="setCat('all',this)">All articles</div>
+      <div class="pill" onclick="setCat('screens',this)">Display setup</div>
+      <div class="pill" onclick="setCat('sound',this)">Sound & audio</div>
+      <div class="pill" onclick="setCat('motion',this)">Motion platform</div>
+    </div>
+    <div class="kb-grid" id="kbGrid"></div>
+  </div>
+
+  <!-- ARTICLE OVERLAY -->
+  <div id="artOverlay">
+    <div class="art-modal">
+      <div class="art-hd">
+        <div>
+          <div class="art-cat" id="aCat"></div>
+          <div class="art-title" id="aTitle"></div>
+        </div>
+        <div class="art-close" onclick="closeArt()">✕</div>
+      </div>
+      <div class="art-meta">
+        <div class="art-mi">Time to complete<b id="aTime"></b></div>
+        <div class="art-mi">Difficulty<b id="aDiff"></b></div>
+        <div class="art-mi">Applies to<b>All P1 systems</b></div>
+      </div>
+      <div class="art-body" id="aBody"></div>
+      <div class="art-foot">
+        <span class="art-foot-t">podium1racing.com/support</span>
+        <button class="dl-btn">Download PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE 2: TICKET -->
+  <div class="page" id="pg2">
+    <div class="tkt-wrap">
+      <div class="tkt-h">Submit a support request</div>
+      <div class="tkt-sub">Our team will follow up at nathaniel@podium1racing.com as soon as possible.</div>
+      <div class="tkt-card">
+        <div>
+          <label>Issue category</label>
+          <select class="tkt-sel" id="tktCat">
+            <option>Display / Triple screens</option>
+            <option>Sound & audio</option>
+            <option>Motion platform</option>
+            <option>USB / Device connectivity</option>
+            <option>Software / Game configuration</option>
+            <option>Hardware / Physical issue</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div>
+          <label>Describe the issue</label>
+          <textarea class="tkt-ta" id="tktDesc" placeholder="Tell us what's happening. What did you try? What did you see on screen?"></textarea>
+        </div>
+        <div class="tkt-rig">
+          <div class="tkt-rig-l">Your rig details (auto-filled)</div>
+          <div id="tktRig" style="font-size:11px;color:var(--txt);line-height:1.8;"></div>
+        </div>
+        <button class="tkt-sub-btn" onclick="submitTicket()">Submit support request</button>
+      </div>
+      <div class="tkt-ok" id="tktOk">
+        <div style="font-size:13px;font-weight:700;color:#1A5C2A;margin-bottom:3px;">Request submitted</div>
+        <div style="font-size:12px;color:#2A5C3A;">Your ticket has been sent to the P1 support team. Nathaniel will follow up at nathaniel@podium1racing.com.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+let CU = null, chatHist = [], chatBusy = false, kbCat = 'all';
+
+// ── KB Articles ────────────────────────────────────────────────────────────
+const ARTICLES = [
+  {id:1,c:'screens',cl:'Display setup',t:'What triple screens are and how they work',d:'Plain-English explainer — why three screens need to act as one.',tm:'5 min',df:'Beginner',b:`<h3>Why three screens?</h3><p>A single monitor only covers what you'd see through the windshield — peripheral vision is cut off. Three screens wrap around your field of view just like sitting in the actual car.</p><h3>How they become one image</h3><ol><li>Each screen is its own display out of the box.</li><li>On 45" and 55" setups, NVIDIA Surround connects them into one very wide display.</li><li>On 32" setups, the games are configured individually using INI files or Resize Raccoon.</li><li>Your sim fills the full width automatically once configured.</li></ol><div class="sc">What you'll see: Your desktop stretches across all three screens with the taskbar running along the bottom of all three (45"/55" with Surround).</div><h3>P1 monitor resolutions</h3><ul><li>32" triple → 7680 × 1440 (iRacing: INI file. ACC/other: Resize Raccoon)</li><li>45" LG Ultragear OLED triple → 10320 × 1440 (NVIDIA Surround)</li><li>55" Samsung Ark triple → 11520 × 2160 (NVIDIA Surround)</li></ul>`},
+  {id:2,c:'screens',cl:'Display setup',t:'Setting up NVIDIA Surround (45" and 55" monitors only)',d:'Full walkthrough including Samsung Ark Game Mode fix.',tm:'15–20 min',df:'Beginner',b:`<div class="wb">This guide is for 45" LG Ultragear and 55" Samsung Ark setups only. If you have 32" monitors, use the INI file guide or Resize Raccoon instead.</div><h3>Open NVIDIA Control Panel</h3><ol><li>Right-click the Windows desktop.</li><li>Click "NVIDIA Control Panel."</li></ol><div class="sc">What you'll see: A window opens with a dark NVIDIA header and a left-side menu.</div><h3>Enable Surround</h3><ol><li>Click "Configure Surround, PhysX" under 3D Settings.</li><li>Check "Span displays with Surround" then click Configure.</li><li>Drag monitor boxes into the correct left-to-right order. Click Identify if unsure which is which.</li><li>Set Resolution: 45" = 10320×1440, 55" = 11520×2160.</li><li>Set Refresh Rate to highest available (144Hz or 165Hz).</li><li>Click Apply.</li></ol><div class="sc">What you'll see: Screens may go black for 2–3 seconds, then come back as one wide desktop.</div><div class="wb">Samsung Ark only: If only two Arks power on, use the joystick button on the back of each monitor → Game tab → confirm Game Mode is OFF on all three.</div>`},
+  {id:3,c:'screens',cl:'Display setup',t:'Setting up triple screens in iRacing',d:'Resolution, FOV, and camera settings for all P1 monitor sizes.',tm:'20–30 min',df:'Intermediate',b:`<h3>32" monitors — iRacing INI file method</h3><p>iRacing stores its display settings in a file called renderer.ini. We edit this directly.</p><ol><li>Close iRacing completely.</li><li>Press Windows + R, type: <b>%USERPROFILE%\\Documents\\iRacing</b> and press Enter.</li><li>Find renderer.ini — right-click → Open with → Notepad.</li><li>Find and update these values to match your monitors exactly:</li></ol><p>For 32" triple: fullScreenWidth=7680, fullScreenHeight=1440, windowedWidth=7680, windowedHeight=1440, windowedXPos=-2560, RefreshRate=144</p><div class="wb">Save with Ctrl+S. Only use Notepad — never Word.</div><h3>45" and 55" monitors — set resolution in-game</h3><ol><li>Launch iRacing → join any session → press Escape → Graphics.</li><li>Set Resolution to your Surround resolution (10320×1440 for 45", 11520×2160 for 55").</li><li>Set Display Mode to Fullscreen or Borderless Window.</li><li>Click Apply.</li></ol><div class="sc">What you'll see: The cockpit spans all three screens.</div><h3>FOV starting points</h3><ul><li>32" triple → 155–170°</li><li>45" OLED triple → 160–175°</li><li>55" triple → 165–180°</li></ul>`},
+  {id:4,c:'screens',cl:'Display setup',t:'Configuring triple screens in ACC',d:'VideoSettings.ini edit, in-car angle/FOV, UE4 crash fix.',tm:'20–30 min',df:'Intermediate',b:`<h3>Enable triple screen in VideoSettings.ini</h3><ol><li>Press Windows + R → type: %USERPROFILE%\\Documents\\Assetto Corsa Competizione\\Config → press Enter.</li><li>Right-click VideoSettings.ini → Open with Notepad. Never use Word.</li><li>Find useTripleScreen=0 and change it to useTripleScreen=1.</li><li>Press Ctrl+S to save. Close the file.</li></ol><div class="wb">Always close ACC before editing this file. If ACC is running, it will overwrite your changes.</div><h3>Set resolution in ACC</h3><ol><li>Launch ACC → Options → Graphics.</li><li>Set Resolution to your Surround resolution (or 7680×1440 for 32" with Resize Raccoon).</li><li>Set Fullscreen to Borderless for easiest use.</li></ol><h3>Adjust in-car</h3><ol><li>Press Ctrl+Shift+H in-car to open camera controls.</li><li>Adjust Triple Screen Angle: 30–50° for most P1 rigs.</li><li>FOV: start at 60–65° for 32", 55–60° for 45".</li></ol><h3>ACC crashes with UE4 Fatal Error (RTX 4090/5080)</h3><ul><li>In ACC Graphics settings: reduce Mirror quality to Low or Off.</li><li>Turn off HDR in Graphics settings.</li><li>In Windows: search "Graphics settings" → find ACC → set to High Performance GPU.</li><li>If crashes persist, contact Nathaniel — there's a GPU power limit fix that takes 5 minutes.</li></ul>`},
+  {id:5,c:'screens',cl:'Display setup',t:'Troubleshooting: screens not spanning',d:'Decision tree covering all common spanning failures.',tm:'10–15 min',df:'Beginner',b:`<h3>First — which monitors do you have?</h3><p><b>32" monitors (P2/P3):</b> NVIDIA Surround is NOT used. iRacing uses INI files. ACC and other titles use Resize Raccoon.</p><p><b>45" or 55" monitors (P1/P1 Ultimate):</b> Use NVIDIA Surround. Follow the steps below.</p><h3>For 45"/55" — confirm Surround is active</h3><ol><li>Right-click desktop → NVIDIA Control Panel → Configure Surround, PhysX.</li><li>Confirm "Span displays with Surround" is ticked.</li><li>If not, tick it → Configure → set resolution → Apply.</li></ol><div class="sc">What you'll see: Desktop stretches across all three screens with one continuous taskbar.</div><h3>Samsung Ark not being detected</h3><p>Use the joystick button on the back of each Ark → Settings → Game tab → set Game Mode to OFF. Do this on all three monitors individually. Then retry Surround setup.</div><h3>PC showing 800×600 after driver update</h3><ol><li>Right-click Start → Device Manager → Display adapters.</li><li>Right-click NVIDIA GPU → Uninstall device → tick "Delete the driver software" → Uninstall.</li><li>Restart PC. Windows will install a basic driver.</li><li>Download and install the latest NVIDIA driver from nvidia.com.</li></ol>`},
+  {id:6,c:'sound',cl:'Sound & audio',t:'How audio works on your Podium 1 simulator',d:'Logitech Z906, the three aux cables, and Realtek Audio explained.',tm:'5 min',df:'Beginner',b:`<h3>The Logitech Z906 5.1 system</h3><p>Your P1 simulator includes the Logitech Z906 — a 5.1 surround sound system with five satellite speakers and a subwoofer. The subwoofer unit contains the amplifier and all the controls.</p><h3>The three aux cables</h3><p>The Z906 connects to your PC using three colour-coded aux cables:</p><ul><li><b>Green cable</b> → Front left + right speakers (primary audio jack on PC)</li><li><b>Black cable</b> → Rear left + right speakers (rear surround jack)</li><li><b>Pink/orange cable</b> → Center speaker + subwoofer channel</li></ul><div class="wb">All three cables must be firmly connected at both ends. Loose black = no rear speakers. Loose pink = no subwoofer.</div><h3>How Windows sees the Z906</h3><p>In Windows Sound settings, the Z906 appears as <b>Speakers (Realtek Audio)</b>. This is always the correct device to select. The control console on the Z906 must be powered ON and set to Input 1.</div>`},
+  {id:7,c:'sound',cl:'Sound & audio',t:'No sound at all: the quick fix checklist',d:'Five-point checklist — Z906, Realtek Audio, Corsair headset.',tm:'5–10 min',df:'Beginner',b:`<p><b>Start here:</b> Is the Z906 powered on? Is it set to Input 1? Is the volume knob turned up? This fixes most "no sound" calls.</p><h3>Five-point checklist</h3><ol><li><b>Windows volume up and not muted?</b> Click the speaker icon in the taskbar — slider above 50%, no red X or mute symbol.</li><li><b>Realtek Audio selected in Windows?</b> Right-click speaker icon → Sound settings → Output must show "Speakers (Realtek Audio)." If it shows anything else, switch it.</li><li><b>Volume up inside the game?</b> Every sim has its own audio settings. iRacing: Options → Sound → Output Device → Speakers (Realtek Audio). ACC: Options → Audio → Audio Device.</li><li><b>Corsair headset recently plugged in?</b> When the headset connects, Windows automatically switches audio output to it. Switch back to Realtek Audio in Sound settings.</li><li><b>Restart the game fully.</b> Close completely, wait 10 seconds, relaunch.</li></ol><div class="sc">What you'll see after fixing: Sound comes back through the Logitech speakers as soon as you select Realtek Audio and the volume is up.</div>`},
+  {id:8,c:'motion',cl:'Motion platform',t:'How the motion platform works: a simple overview',d:'DOF levels, all three P1 platforms, and the startup sequence.',tm:'5 min',df:'Beginner',b:`<h3>What it does</h3><p>The motion platform physically tilts, pitches, and rocks your entire rig in real time as you drive — recreating the sensation of braking, acceleration, and cornering forces.</p><h3>Degrees of freedom (DOF)</h3><ul><li><b>3DOF</b> — Pitch, roll, heave: braking tilt, cornering lean, vertical bumps</li><li><b>4DOF</b> — Above + traction loss or surge</li><li><b>6DOF</b> — Full body motion: the most complete experience</li></ul><h3>Your P1 motion platforms</h3><ul><li><b>D-BOX</b> → D-BOX HaptiSync Center software</li><li><b>Qubic System</b> → QubicManager software</li><li><b>Vero Motion</b> → SimHub software</li></ul><h3>Correct startup sequence — every time</h3><ol><li>Power on the rig and confirm the controller box is on (physical switch on the box).</li><li>Release the motion lock / e-stop.</li><li>Open motion software and wait for Connected status.</li><li>Launch your sim title.</li><li>Join a session — motion activates as soon as you're on track.</li></ol><div class="wb">The motion software must be open and showing Connected BEFORE you launch the game. Wrong order = no motion.</div>`},
+  {id:9,c:'motion',cl:'Motion platform',t:'Motion platform not moving: power checklist',d:'Six-point checklist for D-BOX, Qubic System, and Vero Motion.',tm:'5–10 min',df:'Beginner',b:`<div class="wb">Step off the rig before troubleshooting. The platform will move when it comes back online.</div><h3>Six-point checklist</h3><ol><li><b>Power switch on?</b> The metal controller box at the base of your rig has a physical power switch — flip to ON.</li><li><b>E-stop released?</b> Twist the red mushroom button clockwise until it clicks and pops out.<br>Qubic: if status shows "EMCY – Motion Lock" → twist to release.<br>If it shows "Press and Release Motion Lock" → push button IN then twist to release. Required every Qubic startup.<br>If "Connected with Issues" → open Action Center panel in QubicManager.</li><li><b>Motion software open?</b> D-BOX: HaptiSync Center. Qubic: QubicManager. Vero: SimHub.</li><li><b>Showing Connected?</b> Open does not mean connected — check the status indicator in the software.</li><li><b>Motion output on in-game?</b> iRacing: Options → Controls → enable Motion. ACC: Options → Gameplay → enable Motion Platform. These reset after game updates.</li><li><b>Correct startup order?</b> Motion software must show Connected before you launch the game. If you launched the game first, close everything and start again in the correct order.</li></ol>`},
+  {id:10,c:'motion',cl:'Motion platform',t:'USB troubleshooting: wheels, devices, and hubs',d:'Asetek QR pins, Simucube SC Link, Qubic BT-1, and the Acasis hub.',tm:'10–20 min',df:'Intermediate',b:`<h3>Whole wheelbase cuts out (base goes dark mid-corner)</h3><p>This is almost always a power brick (PSU) issue on the Asetek Invicta under high load.</p><ol><li>Unplug the power brick from the wall AND from the wheelbase.</li><li>Wait until the LED on the power brick goes completely dark.</li><li>Reconnect both ends firmly.</li></ol><div class="wb">This is a temporary fix. If it keeps happening, the power brick needs replacement — contact Nathaniel.</div><h3>Wheel rim cuts out (base stays on, just the wheel disconnects)</h3><p>This is a QR (quick release) pin connection issue, not a USB problem.</p><ol><li>Remove the wheel from the base.</li><li>Inspect the ring of metal pins on the back of the wheel hub — all should be clean, even, protruding equally.</li><li>Clean gently with a dry cloth. No liquid. Reattach firmly until it clicks.</li></ol><h3>Multiple devices dropping at once</h3><p>This points to the Acasis powered hub.</p><ol><li>Check the hub's power adapter is firmly connected at both ends.</li><li>Unplug the hub power, wait 10 seconds, replug.</li><li>Unplug the USB cable from the PC, wait 5 seconds, replug.</li></ol><div class="wb">One bad device can destabilize the whole hub. Remove devices one at a time until the dropouts stop — that device or cable is the cause.</div>`},
+];
+
+// ── Login ──────────────────────────────────────────────────────────────────
+async function doLogin() {
+  const email = document.getElementById('emailIn').value.trim();
+  const pass = document.getElementById('passIn').value;
+  const errEl = document.getElementById('loginErr');
+  const btn = document.getElementById('loginBtn');
+
+  errEl.style.display = 'none';
+  btn.textContent = 'Signing in...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: pass })
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      errEl.style.display = 'block';
+      btn.textContent = 'Sign in to support portal';
+      btn.disabled = false;
+      return;
+    }
+
+    CU = data.customer;
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('portalScreen').style.display = 'block';
+    bootPortal();
+
+  } catch (e) {
+    errEl.textContent = 'Connection error. Please try again.';
+    errEl.style.display = 'block';
+    btn.textContent = 'Sign in to support portal';
+    btn.disabled = false;
+  }
+}
+
+function doLogout() {
+  CU = null; chatHist = [];
+  document.getElementById('chatMsgs').innerHTML = '';
+  document.getElementById('chatSugs').style.display = 'flex';
+  document.getElementById('portalScreen').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('emailIn').value = '';
+  document.getElementById('passIn').value = '';
+  document.getElementById('loginErr').style.display = 'none';
+  document.getElementById('loginBtn').textContent = 'Sign in to support portal';
+  document.getElementById('loginBtn').disabled = false;
+  goTo(0);
+}
+
+// ── Boot portal ────────────────────────────────────────────────────────────
+function bootPortal() {
+  const initials = CU.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2);
+  document.getElementById('navAv').textContent = initials;
+  document.getElementById('navNm').textContent = CU.name;
+  document.getElementById('rigName').textContent = CU.rig || 'Your Simulator';
+
+  const fieldMap = [
+    ['Motion platform', CU.motionPlatform, true],
+    ['Monitors', CU.monitors, false],
+    ['Resolution', CU.resolution, false],
+    ['Graphics card', CU.graphicsCard, false],
+    ['Wheelbase', CU.wheelbase, false],
+    ['Pedals', CU.pedals, false],
+    ['Add-ons', CU.addOns, false],
+    ['Purchase date', CU.purchaseDate, false],
+  ];
+
+  document.getElementById('rigFields').innerHTML = fieldMap
+    .filter(([,v]) => v)
+    .map(([l,v,badge]) => `
+      <div class="rig-field">
+        <span class="rig-fl">${l}</span>
+        <span class="rig-fv">${badge ? `<span class="rig-badge">${v}</span>` : v}</span>
+      </div>
+    `).join('');
+
+  document.getElementById('tktRig').innerHTML = fieldMap
+    .filter(([,v]) => v)
+    .map(([l,v]) => `<span style="color:#888">${l}:</span> ${v}<br>`)
+    .join('');
+
+  const firstName = CU.name.split(' ')[0];
+  addMsg('r', `Hey ${firstName}! I'm Rufus, your P1 support specialist.<br><br>I can see you're running a <b>${CU.rig || 'P1 simulator'}</b>${CU.motionPlatform ? ` with <b>${CU.motionPlatform}</b> motion` : ''}. I already know your full setup — just tell me what's going on and I'll get you sorted.`);
+
+  drawKB();
+}
+
+// ── Navigation ─────────────────────────────────────────────────────────────
+function goTo(i) {
+  document.querySelectorAll('.page').forEach((p,j) => {
+    p.classList.toggle('active', j === i);
+  });
+  document.querySelectorAll('.nav-tab').forEach((t,j) => {
+    t.classList.toggle('active', j === i);
+  });
+  document.getElementById('artOverlay').style.display = 'none';
+}
+
+// ── Chat ───────────────────────────────────────────────────────────────────
+function addMsg(role, html) {
+  const el = document.getElementById('chatMsgs');
+  const isU = role === 'u';
+  const initials = CU ? CU.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2) : 'ME';
+  const d = document.createElement('div');
+  d.className = 'msg' + (isU ? ' u' : '');
+  d.innerHTML = `<div class="mav ${role}">${isU ? initials : 'R'}</div><div class="bub ${role}">${html}</div>`;
+  el.appendChild(d);
+  el.scrollTop = el.scrollHeight;
+}
+
+function showTyp() {
+  const el = document.getElementById('chatMsgs');
+  const d = document.createElement('div');
+  d.className = 'msg'; d.id = 'td';
+  d.innerHTML = `<div class="mav r">R</div><div class="tdots"><span></span><span></span><span></span></div>`;
+  el.appendChild(d); el.scrollTop = el.scrollHeight;
+}
+function hideTyp() { const e = document.getElementById('td'); if(e) e.remove(); }
+
+function fmtReply(t) {
+  t = t.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+  t = t.replace(/What you'?ll see:(.*?)(?=\n|$)/gi, '<div class="sc"><b>What you\'ll see:</b>$1</div>');
+  t = t.replace(/⚠️(.*?)(?=\n|$)/g, '<div class="wn">$1</div>');
+  t = t.replace(/\n(\d+)\.\s/g, '<br><b>$1.</b> ');
+  t = t.replace(/\n•\s/g, '<br>• ');
+  t = t.replace(/\n\n/g, '<br><br>');
+  t = t.replace(/\n/g, '<br>');
+  return t;
+}
+
+async function qs(q) { document.getElementById('chatIn').value = q; doSend(); }
+
+async function doSend() {
+  if (chatBusy) return;
+  const inp = document.getElementById('chatIn');
+  const txt = inp.value.trim();
+  if (!txt) return;
+
+  document.getElementById('chatSugs').style.display = 'none';
+  addMsg('u', txt);
+  inp.value = ''; inp.style.height = '34px';
+  chatHist.push({ role: 'user', content: txt });
+  chatBusy = true;
+  document.getElementById('sendBtn').disabled = true;
+  showTyp();
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: chatHist,
+        customerProfile: CU
+      })
+    });
+    const data = await res.json();
+    const reply = data.reply || "I'm having trouble connecting. Drop Nathaniel an email at nathaniel@podium1racing.com and he'll get you sorted.";
+    chatHist.push({ role: 'assistant', content: reply });
+    hideTyp();
+    addMsg('r', fmtReply(reply));
+  } catch(e) {
+    hideTyp();
+    addMsg('r', "I'm having trouble connecting right now. Drop Nathaniel an email at <b>nathaniel@podium1racing.com</b> and he'll get you sorted.");
+  }
+
+  chatBusy = false;
+  document.getElementById('sendBtn').disabled = false;
+}
+
+// ── KB ─────────────────────────────────────────────────────────────────────
+function drawKB() {
+  const grid = document.getElementById('kbGrid');
+  if (!grid) return;
+  const q = (document.getElementById('kbSrch')?.value || '').toLowerCase();
+  const list = ARTICLES.filter(a =>
+    (kbCat === 'all' || a.c === kbCat) &&
+    (!q || a.t.toLowerCase().includes(q) || a.d.toLowerCase().includes(q))
+  );
+  if (!list.length) {
+    grid.innerHTML = '<div style="font-size:13px;color:var(--mut);grid-column:1/-1;padding:20px 0;">No articles found.</div>';
+    return;
+  }
+  grid.innerHTML = list.map(a => `
+    <div class="kb-card" onclick="openArt(${a.id})">
+      <div class="kb-cat ${a.c}">${a.cl}</div>
+      <div class="kb-card-t">${a.t}</div>
+      <div class="kb-card-d">${a.d}</div>
+      <div class="kb-card-ft">
+        <span class="diff ${a.df.toLowerCase()}">${a.df}</span>
+        <span style="font-size:12px;color:#CCC;">→</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function setCat(cat, el) {
+  kbCat = cat;
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('on'));
+  el.classList.add('on');
+  drawKB();
+}
+
+function openArt(id) {
+  const a = ARTICLES.find(x => x.id === id);
+  if (!a) return;
+  document.getElementById('aCat').textContent = a.cl;
+  document.getElementById('aTitle').textContent = a.t;
+  document.getElementById('aTime').textContent = a.tm;
+  document.getElementById('aDiff').textContent = a.df;
+  document.getElementById('aBody').innerHTML = a.b;
+  document.getElementById('artOverlay').style.display = 'block';
+}
+
+function closeArt() { document.getElementById('artOverlay').style.display = 'none'; }
+
+// ── Ticket ─────────────────────────────────────────────────────────────────
+function submitTicket() {
+  const ok = document.getElementById('tktOk');
+  ok.style.display = 'block';
+  setTimeout(() => ok.style.display = 'none', 6000);
+}
+</script>
+</body>
+</html>
