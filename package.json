@@ -2,12 +2,5 @@
   "name": "p1-support-portal",
   "version": "1.0.0",
   "description": "Podium 1 Racing Customer Support Portal",
-  "scripts": {
-    "dev": "node api/server.js",
-    "start": "node api/server.js"
-  },
-  "dependencies": {
-    "@anthropic-ai/sdk": "^0.20.0"
-  }
+  "private": true
 }
- 
