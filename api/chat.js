@@ -232,28 +232,60 @@ export default async function handler(req, res) {
           .join('\n')
           .trim();
 
-        // Fire the ticket creation
-        const baseUrl = req.headers.host
-          ? `https://${req.headers.host}`
-          : 'https://project-x0zmr-aqzkifwti-nathaniel-9883s-projects.vercel.app';
+        // Call Monday directly — avoids Vercel serverless-to-serverless fetch issues
+        const today = new Date().toISOString().split('T')[0];
+        const rig = customerProfile?.rig || '';
+        const rigSummary = [
+          rig && `Rig: ${rig}`,
+          customerProfile?.motionPlatform && `Motion: ${customerProfile.motionPlatform}`,
+          customerProfile?.monitors && `Monitors: ${customerProfile.monitors}`,
+          customerProfile?.graphicsCard && `GPU: ${customerProfile.graphicsCard}`,
+          customerProfile?.wheelbase && `Wheelbase: ${customerProfile.wheelbase}`,
+        ].filter(Boolean).join(' | ');
 
-        await fetch(`${baseUrl}/api/ticket`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            customerName: customerProfile?.name || 'Customer',
-            customerEmail: customerProfile?.email || '',
-            rig: customerProfile?.rig || '',
-            motionPlatform: customerProfile?.motionPlatform || '',
-            monitors: customerProfile?.monitors || '',
-            graphicsCard: customerProfile?.graphicsCard || '',
-            wheelbase: customerProfile?.wheelbase || '',
-            issueCategory: ticketData?.category || 'Hardware Issue',
-            issueDescription: ticketData?.summary || '',
-            source: 'rufus'
-          })
+        const getRigStatusId = (rigName) => {
+          if (!rigName) return 2;
+          if (rigName.includes('P3')) return 8;
+          if (rigName.includes('P2')) return 0;
+          if (rigName.includes('Ultimate')) return 1;
+          if (rigName.includes('4DOF') || rigName.includes('S ')) return 3;
+          if (rigName.includes('Spyder')) return 4;
+          if (rigName.includes('Flight') || rigName.includes('Latitude') || rigName.includes('RotorRig') || rigName.includes('Cessna')) return 6;
+          return 2;
+        };
+
+        const mondayColumnValues = JSON.stringify({
+          emailt365s7d9: { email: customerProfile?.email || '', text: customerProfile?.email || '' },
+          date4: { date: today },
+          long_text_mm01mw0d: `${ticketData?.summary || 'Hardware issue identified by Rufus'}${rigSummary ? '\n\n' + rigSummary : ''}`,
+          status: { index: getRigStatusId(rig) },
+          single_selectgcj60gd: { label: 'System Troubleshooting/Help' },
+          color_mm02nprs: { label: 'Open' },
         });
 
+        const mondayMutation = `
+          mutation {
+            create_item(
+              board_id: 18397707072,
+              group_id: "group_mm02mf1h",
+              item_name: ${JSON.stringify(customerProfile?.name || 'Customer')},
+              column_values: ${JSON.stringify(mondayColumnValues)}
+            ) { id name }
+          }
+        `;
+
+        const mondayRes = await fetch('https://api.monday.com/v2', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': process.env.MONDAY_API_KEY,
+            'API-Version': '2024-01',
+          },
+          body: JSON.stringify({ query: mondayMutation }),
+        });
+
+        const mondayData = await mondayRes.json();
+        console.log('Monday ticket result:', JSON.stringify(mondayData));
         ticketCreated = true;
       } catch (e) {
         console.error('Failed to parse or create auto-ticket:', e);
