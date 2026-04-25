@@ -21,12 +21,12 @@ export default async function handler(req, res) {
     } = req.body;
 
     const MONDAY_API_KEY = process.env.MONDAY_API_KEY;
-    const BOARD_ID = '7457539723';
-    const GROUP_ID = 'topics'; // "Open" group
+    const BOARD_ID = 18397707072;
+    const GROUP_ID = 'group_mm02mf1h'; // Open Cases
 
     const today = new Date().toISOString().split('T')[0];
 
-    // Build rig summary for the issue field
+    // Build rig summary for the description field
     const rigSummary = [
       rig && `Rig: ${rig}`,
       motionPlatform && `Motion: ${motionPlatform}`,
@@ -35,18 +35,33 @@ export default async function handler(req, res) {
       wheelbase && `Wheelbase: ${wheelbase}`,
     ].filter(Boolean).join(' | ');
 
-    const fullIssue = issueDescription
-      ? `[${issueCategory || 'Support'}] ${issueDescription}`
-      : `[${issueCategory || 'Support'}] Submitted via ${source === 'rufus' ? 'Rufus AI' : 'support portal'}`;
+    const fullDescription = issueDescription
+      ? `${issueDescription}${rigSummary ? '\n\n' + rigSummary : ''}`
+      : `Submitted via ${source === 'rufus' ? 'Rufus AI' : 'support portal'}${rigSummary ? '\n\n' + rigSummary : ''}`;
 
-    const itemName = `${customerName || 'Customer'} — ${issueCategory || 'Support Request'}`;
+    // Map rig type to System Type status label IDs
+    // P3=8, P2=0, P1=2, P1 Ultimate=1, 4DOF=3, Spyder=4, Flight=6, Commercial=9
+    const getRigStatusId = (rigName) => {
+      if (!rigName) return 2; // default to P1
+      if (rigName.includes('P3')) return 8;
+      if (rigName.includes('P2')) return 0;
+      if (rigName.includes('Ultimate')) return 1;
+      if (rigName.includes('4DOF') || rigName.includes('S ')) return 3;
+      if (rigName.includes('Spyder')) return 4;
+      if (rigName.includes('Flight') || rigName.includes('Latitude') || rigName.includes('RotorRig') || rigName.includes('Cessna')) return 6;
+      if (rigName.includes('P1')) return 2;
+      return 2; // default P1
+    };
+
+    const itemName = customerName || 'Customer';
 
     const columnValues = JSON.stringify({
-      text5__1: customerName || '',
-      email__1: { email: customerEmail || '', text: customerEmail || '' },
-      date5__1: { date: today },
-      text7__1: fullIssue + (rigSummary ? ` | ${rigSummary}` : ''),
-      priority__1: { label: source === 'rufus' ? 'High' : 'Medium' },
+      emailt365s7d9: { email: customerEmail || '', text: customerEmail || '' },
+      date4: { date: today },
+      long_text_mm01mw0d: fullDescription,
+      status: { index: getRigStatusId(rig) },
+      single_selectgcj60gd: { label: 'System Troubleshooting/Help' },
+      color_mm02nprs: { label: 'Open' },
     });
 
     const mutation = `
@@ -74,10 +89,11 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json();
+    console.log('Monday API response:', JSON.stringify(data));
 
     if (data.errors) {
-      console.error('Monday API error:', data.errors);
-      return res.status(500).json({ error: 'Failed to create ticket' });
+      console.error('Monday API error:', JSON.stringify(data.errors));
+      return res.status(500).json({ error: 'Failed to create ticket', details: data.errors });
     }
 
     const itemId = data?.data?.create_item?.id;
@@ -87,6 +103,6 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('Ticket error:', error);
-    return res.status(500).json({ error: 'Failed to create ticket' });
+    return res.status(500).json({ error: 'Failed to create ticket', message: error.message });
   }
 }
