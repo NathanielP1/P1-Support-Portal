@@ -11,54 +11,68 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Email and password required' });
   }
 
+  const cleanEmail = email.toLowerCase().trim();
+
   try {
-    // Query Supabase for the customer
-    const response = await fetch(
-      `${process.env.SUPABASE_URL}/rest/v1/customers?email=eq.${encodeURIComponent(email.toLowerCase().trim())}&select=*`,
-      {
-        headers: {
-          'apikey': process.env.SUPABASE_KEY,
-          'Authorization': `Bearer ${process.env.SUPABASE_KEY}`,
-          'Content-Type': 'application/json',
-        }
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_KEY;
+
+    console.log('SUPABASE_URL present:', !!supabaseUrl);
+    console.log('SUPABASE_KEY present:', !!supabaseKey);
+    console.log('Attempting login for:', cleanEmail);
+
+    const queryUrl = `${supabaseUrl}/rest/v1/customers?email=eq.${encodeURIComponent(cleanEmail)}&limit=1`;
+    console.log('Query URL:', queryUrl);
+
+    const response = await fetch(queryUrl, {
+      method: 'GET',
+      headers: {
+        'apikey': supabaseKey,
+        'Authorization': `Bearer ${supabaseKey}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
       }
-    );
+    });
 
-    const customers = await response.json();
+    console.log('Supabase response status:', response.status);
 
-    if (!customers || customers.length === 0) {
+    const text = await response.text();
+    console.log('Supabase raw response:', text);
+
+    let customers;
+    try {
+      customers = JSON.parse(text);
+    } catch(e) {
+      console.error('Failed to parse Supabase response:', text);
+      return res.status(500).json({ error: 'Database error. Please try again.' });
+    }
+
+    if (!Array.isArray(customers) || customers.length === 0) {
+      console.log('No customer found for email:', cleanEmail);
       return res.status(401).json({ error: 'Incorrect email or password' });
     }
 
     const customer = customers[0];
+    console.log('Customer found:', customer.name);
+    console.log('Password match:', customer.password === password);
 
-    // Check password
     if (customer.password !== password) {
       return res.status(401).json({ error: 'Incorrect email or password' });
     }
 
-    // Return customer data without the password
-    const {
-      password: _,
-      id: __,
-      created_at: ___,
-      ...customerData
-    } = customer;
-
-    // Map snake_case database fields to camelCase for the frontend
     return res.status(200).json({
       customer: {
-        name: customerData.name,
-        rig: customerData.rig,
-        motionPlatform: customerData.motion_platform,
-        monitors: customerData.monitors,
-        resolution: customerData.resolution,
-        graphicsCard: customerData.graphics_card,
-        wheelbase: customerData.wheelbase,
-        pedals: customerData.pedals,
-        addOns: customerData.add_ons,
-        purchaseDate: customerData.purchase_date,
-        email: customerData.email,
+        name: customer.name,
+        rig: customer.rig,
+        motionPlatform: customer.motion_platform,
+        monitors: customer.monitors,
+        resolution: customer.resolution,
+        graphicsCard: customer.graphics_card,
+        wheelbase: customer.wheelbase,
+        pedals: customer.pedals,
+        addOns: customer.add_ons,
+        purchaseDate: customer.purchase_date,
+        email: customer.email,
       }
     });
 
