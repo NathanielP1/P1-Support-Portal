@@ -864,8 +864,41 @@ html,body{height:100%;font-family:var(--font-body);background:var(--bg-deep);col
           </div>
         </div>
       </div>
+      
+<!-- PAGE: KB -->
+<div class="page" id="pg-kb">
+  <div class="kb-toprow">
+    <div class="kb-heading">Knowledge Base</div>
+    <div class="srch-wrap">
+      <svg class="srch-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+        <circle cx="6.5" cy="6.5" r="4"/><line x1="10" y1="10" x2="14" y2="14"/>
+      </svg>
+      <input class="srch-input" id="kbSrch" placeholder="Search articles..." oninput="drawKB()"/>
+    </div>
+  </div>
+  <div class="cat-pills" id="kbCatPills">
+    <div class="cat-pill on" onclick="setCat('all',this)">All articles</div>
+  </div>
+  <div class="kb-grid" id="kbGrid">
+    <div style="font-size:13px;color:var(--text-muted);grid-column:1/-1;padding:20px 0;">Loading articles...</div>
+  </div>
+</div>
 
-      <!-- PAGE: KB -->
+<!-- DOCUMENT VIEWER OVERLAY -->
+<div id="docOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:200;display:none;flex-direction:column;backdrop-filter:blur(4px);">
+  <div style="background:var(--bg-surface);border-bottom:1px solid var(--border-mid);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;">
+    <div>
+      <div style="font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:2px;">Knowledge Base</div>
+      <div style="font-size:14px;font-weight:600;color:var(--text-primary);" id="docTitle"></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <a id="docDownload" href="#" target="_blank" style="font-size:12px;padding:7px 14px;background:var(--red-dim);color:var(--red);border:1px solid rgba(204,17,34,0.2);border-radius:6px;text-decoration:none;font-family:Arial,sans-serif;">↓ Download</a>
+      <div onclick="closeDoc()" style="width:30px;height:30px;border-radius:6px;background:var(--bg-hover);border:1px solid var(--border-mid);color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;">✕</div>
+    </div>
+  </div>
+  <iframe id="docFrame" src="" style="flex:1;border:none;background:#fff;"></iframe>
+</div>
+      
       <div class="page" id="pg-kb">
         <div class="kb-toprow">
           <div class="kb-heading">Knowledge Base</div>
@@ -1271,7 +1304,7 @@ function bootPortal(){
     buildCard(profileFields.slice(0,mid),'System')+
     buildCard(profileFields.slice(mid),'Hardware');
 
-  drawKB();
+  loadKB();
 
   // Rufus greeting
   addMsg('r',`Hey ${first}! I've got your <b>${CU.rig||'simulator'}</b> pulled up${CU.motionPlatform?` — <b>${CU.motionPlatform}</b> motion`:''}, <b>${CU.monitors||'monitors'}</b>, <b>${CU.graphicsCard||'GPU'}</b>. What's going on today?`);
@@ -1347,42 +1380,68 @@ async function doSend(){
   chatBusy=false;document.getElementById('sendBtn').disabled=false;
 }
 
-// ── KB ─────────────────────────────────────────────────────────────────────
-function drawKB(){
-  const g=document.getElementById('kbGrid');
-  if(!g)return;
-  const q=(document.getElementById('kbSrch')?.value||'').toLowerCase();
-  const list=ARTICLES.filter(a=>(kbCat==='all'||a.c===kbCat)&&(!q||a.t.toLowerCase().includes(q)||a.d.toLowerCase().includes(q)));
-  if(!list.length){
-    g.innerHTML='<div style="font-size:13px;color:var(--text-muted);grid-column:1/-1;padding:20px 0;">No articles found.</div>';
+// ── KB — Drive powered ─────────────────────────────────────────────────────
+let kbFiles = [];
+let kbCat = 'all';
+
+async function loadKB() {
+  try {
+    const r = await fetch('/api/kb');
+    const data = await r.json();
+    kbFiles = data.files || [];
+    drawKB();
+  } catch(e) {
+    document.getElementById('kbGrid').innerHTML = '<div style="font-size:13px;color:var(--text-muted);grid-column:1/-1;padding:20px 0;">Failed to load articles. Please try again.</div>';
+  }
+}
+
+function drawKB() {
+  const grid = document.getElementById('kbGrid');
+  if (!grid) return;
+  const q = (document.getElementById('kbSrch')?.value || '').toLowerCase();
+  const list = kbFiles.filter(f => !q || f.name.toLowerCase().includes(q));
+
+  if (!list.length) {
+    grid.innerHTML = '<div style="font-size:13px;color:var(--text-muted);grid-column:1/-1;padding:20px 0;">No articles found.</div>';
     return;
   }
-  g.innerHTML=list.map(a=>`
-    <div class="kb-card" onclick="openArt(${a.id})">
-      <div class="kb-card-cat ${a.c}">${a.cl}</div>
-      <div class="kb-card-title">${a.t}</div>
-      <div class="kb-card-desc">${a.d}</div>
-      <div class="kb-card-foot">
-        <span class="diff-pill ${a.df.toLowerCase()}">${a.df}</span>
-        <span class="kb-arrow">→</span>
+
+  grid.innerHTML = list.map(f => {
+    const ext = f.filename?.split('.').pop()?.toUpperCase() || 'DOC';
+    const date = f.modified ? new Date(f.modified).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+    return `
+      <div class="kb-card" onclick="openDoc('${f.id}', '${f.name.replace(/'/g, "\\'")}', '${f.previewUrl}', '${f.downloadUrl}')">
+        <div class="kb-card-cat screens">${ext} Document</div>
+        <div class="kb-card-title">${f.name}</div>
+        <div class="kb-card-desc">Click to view or download this guide</div>
+        <div class="kb-card-foot">
+          <span class="diff-pill beginner">${date}</span>
+          <span class="kb-arrow">→</span>
+        </div>
       </div>
-    </div>`).join('');
+    `;
+  }).join('');
 }
-function setCat(cat,el){
-  kbCat=cat;
-  document.querySelectorAll('.cat-pill').forEach(p=>p.classList.remove('on'));
-  el.classList.add('on');drawKB();
+
+function setCat(cat, el) {
+  kbCat = cat;
+  document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('on'));
+  el.classList.add('on');
+  drawKB();
 }
-function openArt(id){
-  const a=ARTICLES.find(x=>x.id===id);if(!a)return;
-  document.getElementById('aCat').textContent=a.cl;
-  document.getElementById('aTitle').textContent=a.t;
-  document.getElementById('aTime').textContent=a.tm;
-  document.getElementById('aDiff').textContent=a.df;
-  document.getElementById('aBody').innerHTML=a.b;
-  document.getElementById('artOverlay').style.display='block';
+
+function openDoc(id, name, previewUrl, downloadUrl) {
+  document.getElementById('docTitle').textContent = name;
+  document.getElementById('docDownload').href = downloadUrl;
+  document.getElementById('docFrame').src = previewUrl;
+  const overlay = document.getElementById('docOverlay');
+  overlay.style.display = 'flex';
 }
-function closeArt(){document.getElementById('artOverlay').style.display='none';}
+
+function closeDoc() {
+  document.getElementById('docOverlay').style.display = 'none';
+  document.getElementById('docFrame').src = '';
+}
 
 // ── Ticket ─────────────────────────────────────────────────────────────────
 function submitTicket(){
