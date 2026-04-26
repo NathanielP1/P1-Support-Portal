@@ -995,392 +995,7 @@ html,body{height:100%;font-family:var(--font-body);background:var(--bg-deep);col
 </div>
 
 <script>
-// ── KB Articles ────────────────────────────────────────────────────────────
-const ARTICLES=[
-  {id:1,c:'screens',cl:'Display setup',t:'What triple screens are and how they work',d:'Plain-English explainer — why three screens need to act as one.',tm:'5 min',df:'Beginner',b:`
-    <h3>Why three screens?</h3>
-    <p>A single monitor only covers what you'd see through the windshield — your peripheral vision is completely cut off. Three screens wrap around your field of view, just like sitting in a real race car.</p>
-    <h3>How configuration works — and why it differs by rig</h3>
-    <p><b>45" and 55" monitor rigs (P1, P1 Ultimate):</b> use NVIDIA Surround, which combines all three screens into one very wide display at the Windows level. Once Surround is active, every game just sees one wide screen and fills it automatically.</p>
-    <p><b>32" monitor rigs (P2, P3):</b> do not use NVIDIA Surround. Instead, each game is configured individually — iRacing uses a configuration file called <code>rendererDX11Monitor</code>, and other titles use a tool called Resize Raccoon.</p>
-    <h3>P1 monitor resolutions</h3>
-    <ul>
-      <li>32" AOC triple (P2/P3) → 7680 × 1440</li>
-      <li>45" LG Ultragear OLED triple (P1) → 10320 × 1440</li>
-      <li>55" Samsung Ark triple (P1 Ultimate) → 11520 × 2160</li>
-    </ul>`
-  },
-  {id:2,c:'screens',cl:'Display setup',t:'Setting up NVIDIA Surround (P1 and P1 Ultimate only)',d:'Step-by-step Surround setup for 45" and 55" monitor rigs.',tm:'15–20 min',df:'Beginner',b:`
-    <div class="wb">This guide is for P1 and P1 Ultimate rigs with 45" LG Ultragear or 55" Samsung Ark monitors only. If you have a P2 or P3 with 32" monitors, use the rendererDX11Monitor guide for iRacing instead.</div>
-    <h3>Open NVIDIA Control Panel</h3>
-    <ol>
-      <li>Right-click anywhere on the Windows desktop.</li>
-      <li>Click <b>NVIDIA Control Panel</b>.</li>
-    </ol>
-    <div class="sc">What you'll see: A window opens with a dark NVIDIA header and a left-side menu with 3D Settings and Display sections.</div>
-    <h3>Enable Surround</h3>
-    <ol>
-      <li>In the left menu, click <b>Configure Surround, PhysX</b> under 3D Settings.</li>
-      <li>Check the box next to <b>Span displays with Surround</b>, then click <b>Configure</b>.</li>
-      <li>Drag the grey monitor boxes to match your physical left-to-right screen order. Click <b>Identify</b> if you're unsure which is which.</li>
-      <li>Set Resolution: 45" = 10320×1440 &nbsp;|&nbsp; 55" = 11520×2160</li>
-      <li>Set Refresh Rate to the highest available (144Hz or 165Hz).</li>
-      <li>Click <b>Apply</b>.</li>
-    </ol>
-    <div class="sc">What you'll see: Screens go black for 2–3 seconds, then return as one continuous wide desktop with the taskbar running across all three.</div>
-    <div class="wb">Samsung Ark only: If only two of three Arks power on, use the joystick button on the back of each monitor → Settings → Game tab → confirm Game Mode is OFF on all three.</div>
-    <h3>After Surround is active</h3>
-    <p>Open any game, go to Graphics settings, and set the resolution to your Surround resolution. That's it — no INI file editing required on Surround rigs.</p>`
-  },
-  {id:3,c:'screens',cl:'Display setup',t:'Configuring iRacing triple screens',d:'Resolution setup for all P1 monitor sizes — correct method per rig.',tm:'15–20 min',df:'Intermediate',b:`
-    <h3>P1 and P1 Ultimate — 45" and 55" monitors</h3>
-    <p>NVIDIA Surround must already be active before you start. If Surround is set up, resolution is handled entirely inside iRacing — no file editing needed.</p>
-    <ol>
-      <li>Launch iRacing and load any test drive or session.</li>
-      <li>Click the settings icon (top right) → <b>Display</b>.</li>
-      <li>Set Resolution to your Surround resolution:<br>— 45" triple → 10320×1440<br>— 55" triple → 11520×2160</li>
-      <li>Click <b>Apply & Close</b>.</li>
-    </ol>
-    <div class="sc">What you'll see: The cockpit fills all three screens. The image will look proportionally correct across the full width.</div>
-    <h3>P2 and P3 — 32" monitors</h3>
-    <p>32" rigs do not use NVIDIA Surround. iRacing resolution is set by editing a configuration file called <code>rendererDX11Monitor</code>.</p>
-    <ol>
-      <li>Close iRacing completely.</li>
-      <li>Press <b>Windows + R</b>, type <code>%USERPROFILE%\\Documents\\iRacing</code> and press Enter.</li>
-      <li>Find <b>rendererDX11Monitor</b> — right-click → Open with → <b>Notepad</b>. Never use Word.</li>
-      <li>Find and update these values:</li>
-    </ol>
-    <p style="font-family:var(--font-mono);font-size:11px;background:rgba(255,255,255,0.03);padding:10px;border-radius:4px;line-height:1.8;color:rgba(204,17,34,0.8);">
-      fullScreenWidth=7680<br>fullScreenHeight=1440<br>windowedWidth=7680<br>windowedHeight=1440<br>windowedXPos=-2560<br>RefreshRate=144
-    </p>
-    <ol start="5">
-      <li>Save with <b>Ctrl+S</b> and close Notepad.</li>
-      <li>Launch iRacing — it will open in triple screen mode.</li>
-    </ol>
-    <div class="wb">Only use Notepad to edit this file. Word and other word processors add hidden formatting that corrupts the file.</div>`
-  },
-  {id:4,c:'screens',cl:'Display setup',t:'Configuring triple screens in ACC',d:'VideoSettings.ini edit, in-car angle/FOV, UE4 crash fix.',tm:'20–30 min',df:'Intermediate',b:`
-    <h3>Step 1 — Enable triple screen in ACC's config file</h3>
-    <ol>
-      <li>Close ACC completely.</li>
-      <li>Press <b>Windows + R</b> and type: <code>%USERPROFILE%\\Documents\\Assetto Corsa Competizione\\Config</code></li>
-      <li>Right-click <b>VideoSettings.ini</b> → Open with → <b>Notepad only</b>.</li>
-      <li>Find <code>useTripleScreen=0</code> and change it to <code>useTripleScreen=1</code>.</li>
-      <li>Press <b>Ctrl+S</b> to save and close Notepad.</li>
-    </ol>
-    <div class="wb">Always close ACC before editing. Notepad only — Word corrupts the file and ACC won't launch.</div>
-    <h3>Step 2 — Set resolution in ACC</h3>
-    <ol>
-      <li>Launch ACC → Options → Graphics.</li>
-      <li>Set Resolution to your Surround resolution (or 7680×1440 for P2/P3 using Resize Raccoon).</li>
-      <li>Set Fullscreen to <b>Borderless</b>.</li>
-      <li>Click Apply.</li>
-    </ol>
-    <h3>Step 3 — Adjust in-car with Ctrl+Shift+H</h3>
-    <ol>
-      <li>Load into any session and press <b>Ctrl+Shift+H</b> to open the camera editor.</li>
-      <li>Adjust <b>Triple Screen Angle</b> (30–50° works for most P1 rigs) until the horizon flows across all three screens naturally.</li>
-      <li>Adjust FOV — start at 60–65° for 32" monitors, 55–60° for 45".</li>
-    </ol>
-    <h3>ACC crashing with UE4 Fatal Error (RTX 4090 / 5080)</h3>
-    <p>This is caused by VRAM spikes on high-end GPUs with triple screens. Three fixes:</p>
-    <ul>
-      <li>In ACC Graphics settings: set Mirror quality to <b>Low</b> or <b>Off</b>.</li>
-      <li>Turn off <b>HDR</b> in ACC Graphics settings.</li>
-      <li>In Windows: search <b>Graphics settings</b> → find ACC → set to <b>High Performance GPU</b>.</li>
-    </ul>`
-  },
-  {id:5,c:'screens',cl:'Display setup',t:'Troubleshooting: screens not spanning',d:'Step-by-step guide for all spanning failures by rig type.',tm:'10–15 min',df:'Beginner',b:`
-    <h3>First — which monitors do you have?</h3>
-    <p><b>32" monitors (P2/P3):</b> NVIDIA Surround is NOT used. iRacing uses the rendererDX11Monitor file. ACC and other titles use Resize Raccoon. If your 32" screens aren't spanning, the solution is in those tools — not in NVIDIA Control Panel.</p>
-    <p><b>45" or 55" monitors (P1/P1 Ultimate):</b> These use NVIDIA Surround. Follow the steps below.</p>
-    <h3>For 45"/55" rigs — check Surround is active</h3>
-    <ol>
-      <li>Right-click desktop → <b>NVIDIA Control Panel</b> → <b>Configure Surround, PhysX</b>.</li>
-      <li>Confirm <b>Span displays with Surround</b> is ticked.</li>
-      <li>If not: tick it → Configure → set resolution → Apply.</li>
-    </ol>
-    <div class="sc">What you'll see when Surround is active: your Windows desktop stretches across all three screens with one taskbar running the full width.</div>
-    <h3>Samsung Ark not being detected by Surround</h3>
-    <p>The Ark's Game Mode can prevent NVIDIA from detecting it. Use the joystick button on the back of each Ark → Settings → Game tab → set Game Mode to <b>OFF</b>. Do this on all three monitors individually, then retry Surround.</p>
-    <h3>PC showing 800×600 after a driver update</h3>
-    <ol>
-      <li>Right-click Start → Device Manager → Display adapters.</li>
-      <li>Right-click your NVIDIA GPU → Uninstall device → tick "Delete driver" → Uninstall.</li>
-      <li>Restart. Windows installs a basic driver automatically.</li>
-      <li>Download and install the latest NVIDIA driver from nvidia.com.</li>
-    </ol>`
-  },
-  {id:6,c:'sound',cl:'Sound & audio',t:'How audio works on your Podium 1 simulator',d:'Logitech Z906, the three aux cables, and Realtek Audio explained.',tm:'5 min',df:'Beginner',b:`
-    <h3>Your audio system — the Logitech Z906</h3>
-    <p>Your P1 simulator includes the Logitech Z906 5.1 surround system — five satellite speakers and a subwoofer. The subwoofer unit contains the amplifier and all controls for the entire system.</p>
-    <h3>The three aux cables</h3>
-    <p>The Z906 connects to your PC using three colour-coded 3.5mm cables plugged into the audio ports on the back of the PC and the back of the subwoofer:</p>
-    <ul>
-      <li><b>Green cable</b> → Front left + right speakers (primary audio jack on PC)</li>
-      <li><b>Black cable</b> → Rear left + right speakers (rear surround jack)</li>
-      <li><b>Pink/orange cable</b> → Center speaker + subwoofer channel</li>
-    </ul>
-    <div class="wb">All three cables must be firmly connected at both ends. A loose black cable = no rear speakers. A loose pink cable = no subwoofer.</div>
-    <h3>How Windows sees the Z906</h3>
-    <p>In Windows Sound settings, the Z906 appears as <b>Speakers (Realtek Audio)</b>. This is always the correct device to select across all P1 simulators.</p>
-    <p>The Z906 control console must be <b>powered ON</b> and set to <b>Input 1</b> for the aux cable connection to work.</p>`
-  },
-  {id:7,c:'sound',cl:'Sound & audio',t:'No sound at all: the quick fix checklist',d:'Five-point checklist — Z906 input, Realtek Audio, Corsair headset.',tm:'5–10 min',df:'Beginner',b:`
-    <p><b>Start here:</b> Is the Z906 powered on? Is it set to Input 1? Is the volume knob turned up? This is the most common cause and takes two seconds to check.</p>
-    <h3>Five-point checklist</h3>
-    <ol>
-      <li><b>Windows volume up and not muted?</b> Click the speaker icon in the taskbar — confirm the slider is above 50% and there's no red X or mute symbol.</li>
-      <li><b>Realtek Audio selected in Windows?</b> Right-click the speaker icon → Sound settings → Output must show <b>Speakers (Realtek Audio)</b>. If it shows anything else, switch it.</li>
-      <li><b>Volume up inside the game?</b> Every sim has its own audio settings. In iRacing: Options → Sound → Output Device → Speakers (Realtek Audio). In ACC: Options → Audio → Audio Device.</li>
-      <li><b>Corsair headset recently plugged in?</b> When the headset connects, Windows automatically switches all audio output to it. Open Sound settings and switch the Output back to Speakers (Realtek Audio).</li>
-      <li><b>Restart the game fully.</b> Close completely — don't just Alt-Tab — wait 10 seconds, then relaunch.</li>
-    </ol>
-    <div class="sc">What you'll see after fixing: sound returns through the Logitech speakers as soon as you select Realtek Audio and confirm the volume is up.</div>`
-  },
-  {id:8,c:'motion',cl:'Motion platform',t:'How the motion platform works: a simple overview',d:'DOF levels, all three P1 platforms, and the startup sequence.',tm:'5 min',df:'Beginner',b:`
-    <h3>What it does</h3>
-    <p>The motion platform physically tilts, pitches, and rocks your entire rig in real time as you drive — recreating the sensation of braking force, acceleration, and cornering g-loads. The actuators under the frame respond instantly to what the game is doing.</p>
-    <h3>Degrees of freedom (DOF)</h3>
-    <ul>
-      <li><b>3DOF</b> — Pitch, roll, heave: braking tilt, cornering lean, vertical bumps and kerbs</li>
-      <li><b>4DOF</b> — Above + traction loss or surge sensation</li>
-      <li><b>6DOF</b> — Full body motion: the most complete recreation of real driving forces</li>
-    </ul>
-    <h3>Your P1 motion platform options</h3>
-    <ul>
-      <li><b>D-BOX</b> → software: D-BOX HaptiSync Center</li>
-      <li><b>Qubic System</b> → software: QubicManager</li>
-      <li><b>Vero Motion</b> → software: SimHub</li>
-    </ul>
-    <h3>Correct startup sequence — every time</h3>
-    <ol>
-      <li>Power on the rig and confirm the controller box is on (physical switch on the box).</li>
-      <li>Release the motion lock / e-stop.</li>
-      <li>Open your motion software and wait for <b>Connected</b> status.</li>
-      <li>Launch your sim title.</li>
-      <li>Join a session — motion activates as soon as you're on track.</li>
-    </ol>
-    <div class="wb">The motion software must show Connected BEFORE you launch the game. Launching the game first is the most common reason motion doesn't work.</div>`
-  },
-  {id:9,c:'motion',cl:'Motion platform',t:'Motion platform not moving: power checklist',d:'Six-point checklist for D-BOX, Qubic System, and Vero Motion.',tm:'5–10 min',df:'Beginner',b:`
-    <div class="wb">Step off the rig before troubleshooting. The platform will move when it comes back online — make sure you're clear of the seat.</div>
-    <h3>Six-point checklist</h3>
-    <ol>
-      <li><b>Power switch on?</b> The metal controller box at the base of the rig has a physical power switch. Flip it to ON — you should see at least one indicator light.</li>
-      <li><b>E-stop / motion lock released?</b> Twist the red mushroom button clockwise until it clicks out.<br>
-        — Qubic <b>"EMCY – Motion Lock"</b> = button is pushed in. Twist to release.<br>
-        — Qubic <b>"Press and Release Motion Lock"</b> = push the button IN, then twist to release. Required every Qubic startup.<br>
-        — Qubic <b>"Connected with Issues"</b> = open the Action Center panel in QubicManager for the specific error.</li>
-      <li><b>Motion software open?</b> D-BOX: HaptiSync Center. Qubic: QubicManager. Vero: SimHub.</li>
-      <li><b>Software showing Connected?</b> Open does not mean connected — check the status indicator in the software window.</li>
-      <li><b>Motion output enabled in-game?</b> iRacing: Options → Controls → enable Motion. ACC: Options → Gameplay → enable Motion Platform. These settings reset after game updates.</li>
-      <li><b>Correct startup order?</b> Motion software must show Connected before you launch the game. If you opened the game first, close everything and start again in the correct order.</li>
-    </ol>`
-  },
-  {id:10,c:'motion',cl:'Motion platform',t:'USB troubleshooting: wheels, devices, and hubs',d:'Asetek QR pins, Simucube SC Link, Qubic BT-1, and the Acasis hub.',tm:'10–20 min',df:'Intermediate',b:`
-    <h3>Whole wheelbase goes dark mid-corner (full blackout)</h3>
-    <p>This is almost always the Asetek Invicta power brick failing under high load. It's a known issue on hard cornering sessions.</p>
-    <ol>
-      <li>Unplug the power brick from the wall AND from the wheelbase.</li>
-      <li>Wait until the light on the power brick goes completely dark.</li>
-      <li>Reconnect both ends firmly.</li>
-    </ol>
-    <div class="wb">This is a temporary fix. If it keeps happening, the power brick needs replacement. Contact Nathaniel at nathaniel@podium1racing.com.</div>
-    <h3>Wheel rim cuts out but wheelbase stays on</h3>
-    <p>This is a QR (quick release) pin connection issue — not a USB problem.</p>
-    <ol>
-      <li>Remove the wheel from the base.</li>
-      <li>Inspect the metal pins on the back of the wheel hub — they should all be clean and protruding evenly.</li>
-      <li>Clean gently with a dry cloth (no liquid). Reattach firmly until you feel it click.</li>
-    </ol>
-    <h3>Multiple devices dropping at once</h3>
-    <p>Points to the Acasis powered hub losing power or its USB connection.</p>
-    <ol>
-      <li>Check the hub's power adapter is firmly plugged in at both ends.</li>
-      <li>Unplug hub power, wait 10 seconds, replug.</li>
-      <li>Unplug the USB cable from the PC side, wait 5 seconds, replug.</li>
-    </ol>
-    <div class="wb">One bad USB device can destabilize the entire hub. If dropouts continue, remove devices one at a time until they stop — that device or its cable is the cause.</div>`
-  },
-];
-
-// ── State ──────────────────────────────────────────────────────────────────
-let CU=null, chatHist=[], chatBusy=false, kbCat='all';
-
-// ── Login ──────────────────────────────────────────────────────────────────
-async function doLogin(){
-  const email=document.getElementById('emailIn').value.trim();
-  const pass=document.getElementById('passIn').value;
-  const errEl=document.getElementById('loginErr');
-  const btn=document.getElementById('loginBtn');
-  errEl.style.display='none';
-  btn.textContent='Signing in…';btn.disabled=true;
-  try{
-    const r=await fetch('/api/auth',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({email,password:pass})
-    });
-    const d=await r.json();
-    if(!r.ok){
-      errEl.style.display='block';
-      btn.textContent='Sign in to support portal';btn.disabled=false;
-      return;
-    }
-    CU=d.customer;
-    document.getElementById('loginScreen').style.display='none';
-    const ps=document.getElementById('portalScreen');
-    ps.style.display='flex';ps.classList.add('visible');
-    bootPortal();
-  }catch(e){
-    errEl.textContent='Connection error. Please try again.';
-    errEl.style.display='block';
-    btn.textContent='Sign in to support portal';btn.disabled=false;
-  }
-}
-
-function doLogout(){
-  CU=null;chatHist=[];
-  document.getElementById('chatMsgs').innerHTML='';
-  document.getElementById('chatSugs').style.display='flex';
-  const ps=document.getElementById('portalScreen');
-  ps.style.display='none';ps.classList.remove('visible');
-  document.getElementById('loginScreen').style.display='flex';
-  document.getElementById('emailIn').value='';
-  document.getElementById('passIn').value='';
-  document.getElementById('loginErr').style.display='none';
-  document.getElementById('loginBtn').textContent='Sign in to support portal';
-  document.getElementById('loginBtn').disabled=false;
-  goTo('rufus');
-}
-
-// ── Boot ───────────────────────────────────────────────────────────────────
-function bootPortal(){
-  const name=CU.name||'';
-  const first=name.split(' ')[0];
-  const inits=name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
-  document.getElementById('topAv').textContent=inits;
-  document.getElementById('topName').textContent=name;
-  document.getElementById('greetingText').innerHTML=`Hey <strong>${first}</strong>, welcome back.`;
-  document.getElementById('greetingSub').textContent=`Rufus is online and ready to help with your ${CU.rig||'simulator'}.`;
-
-  // Ticket rig summary
-  const fields=[
-    ['Motion platform',CU.motionPlatform,true],
-    ['Monitors',CU.monitors,false],
-    ['Resolution',CU.resolution,false],
-    ['Graphics card',CU.graphicsCard,false],
-    ['Wheelbase',CU.wheelbase,false],
-    ['Pedals',CU.pedals,false],
-    ['Add-ons',CU.addOns,false],
-    ['Purchase date',CU.purchaseDate,false],
-  ].filter(([,v])=>v);
-
-  document.getElementById('tktRig').innerHTML=fields.map(([k,v,badge])=>`
-    <div class="rig-row">
-      <span class="rig-key">${k}</span>
-      <span class="rig-val">${badge?`<span class="rig-badge">${v}</span>`:v}</span>
-    </div>`).join('');
-
-  // Profile page
-  const profileFields=[
-    ['Simulator',CU.rig||'—'],
-    ['Motion platform',CU.motionPlatform||'—'],
-    ['Monitors',CU.monitors||'—'],
-    ['Resolution',CU.resolution||'—'],
-    ['Graphics card',CU.graphicsCard||'—'],
-    ['Wheelbase',CU.wheelbase||'—'],
-    ['Pedals',CU.pedals||'—'],
-    ['Add-ons',CU.addOns||'—'],
-    ['Purchase date',CU.purchaseDate||'—'],
-  ];
-  const mid=Math.ceil(profileFields.length/2);
-  const buildCard=(items,label)=>`
-    <div class="profile-card">
-      <div class="profile-card-label">${label}</div>
-      ${items.map(([k,v])=>`<div class="profile-row"><span class="profile-key">${k}</span><span class="profile-val">${v}</span></div>`).join('')}
-    </div>`;
-  document.getElementById('profileGrid').innerHTML=
-    buildCard(profileFields.slice(0,mid),'System')+
-    buildCard(profileFields.slice(mid),'Hardware');
-
-  loadKB();
-
-  // Rufus greeting
-  addMsg('r',`Hey ${first}! I've got your <b>${CU.rig||'simulator'}</b> pulled up${CU.motionPlatform?` — <b>${CU.motionPlatform}</b> motion`:''}, <b>${CU.monitors||'monitors'}</b>, <b>${CU.graphicsCard||'GPU'}</b>. What's going on today?`);
-}
-
-// ── Nav ────────────────────────────────────────────────────────────────────
-function goTo(tab){
-  document.querySelectorAll('.page').forEach(p=>{p.classList.remove('active');});
-  document.querySelectorAll('.sitem').forEach(s=>s.classList.remove('active'));
-  const pg=document.getElementById('pg-'+tab);
-  const si=document.getElementById('si-'+tab);
-  if(pg) pg.classList.add('active');
-  if(si) si.classList.add('active');
-  document.getElementById('artOverlay').style.display='none';
-  if(tab==='kb') drawKB();
-}
-
-// ── Chat ───────────────────────────────────────────────────────────────────
-function addMsg(role,html){
-  const el=document.getElementById('chatMsgs');
-  const isU=role==='u';
-  const inits=CU?(CU.name||'').split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2):'ME';
-  const d=document.createElement('div');
-  d.className='msg'+(isU?' u':'');
-  d.innerHTML=`<div class="msg-av ${role}">${isU?inits:'R'}</div><div class="bubble ${role}">${html}</div>`;
-  el.appendChild(d);el.scrollTop=el.scrollHeight;
-}
-function showTyp(){
-  const el=document.getElementById('chatMsgs');
-  const d=document.createElement('div');
-  d.className='msg';d.id='td';
-  d.innerHTML=`<div class="msg-av r">R</div><div class="tdots"><span></span><span></span><span></span></div>`;
-  el.appendChild(d);el.scrollTop=el.scrollHeight;
-}
-function hideTyp(){const e=document.getElementById('td');if(e)e.remove();}
-
-function fmtReply(t){
-  t=t.replace(/\*\*(.*?)\*\*/g,'<b>$1</b>');
-  t=t.replace(/What you'?ll see:(.*?)(?=\n|$)/gi,'<div class="sc"><b>What you\'ll see:</b>$1</div>');
-  t=t.replace(/⚠️(.*?)(?=\n|$)/g,'<div class="wn">$1</div>');
-  t=t.replace(/\n(\d+)\.\s/g,'<br><b style="color:var(--red)">$1.</b> ');
-  t=t.replace(/\n•\s/g,'<br>• ');
-  t=t.replace(/\n\n/g,'<br><br>');
-  t=t.replace(/\n/g,'<br>');
-  return t;
-}
-
-async function qs(q){document.getElementById('chatIn').value=q;doSend();}
-
-async function doSend(){
-  if(chatBusy)return;
-  const inp=document.getElementById('chatIn');
-  const txt=inp.value.trim();if(!txt)return;
-  document.getElementById('chatSugs').style.display='none';
-  addMsg('u',txt);
-  inp.value='';inp.style.height='auto';
-  chatHist.push({role:'user',content:txt});
-  chatBusy=true;document.getElementById('sendBtn').disabled=true;
-  showTyp();
-  try{
-    const r=await fetch('/api/chat',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({messages:chatHist,customerProfile:CU})
-    });
-    const d=await r.json();
-    const rep=d.reply||"I'm having trouble connecting right now. Drop Nathaniel an email at nathaniel@podium1racing.com and he'll get you sorted.";
-    chatHist.push({role:'assistant',content:rep});
-    hideTyp();addMsg('r',fmtReply(rep));
-  }catch(e){
-    hideTyp();
-    addMsg('r',"I'm having trouble connecting right now. Drop Nathaniel an email at <b>nathaniel@podium1racing.com</b> and he'll get you sorted.");
-  }
-  chatBusy=false;document.getElementById('sendBtn').disabled=false;
-}
-
-// ── KB — Drive powered ─────────────────────────────────────────────────────
+// ── KB Articles (Drive powered) ────────────────────────────────────────────
 let kbFiles = [];
 let kbCat = 'all';
 
@@ -1400,12 +1015,10 @@ function drawKB() {
   if (!grid) return;
   const q = (document.getElementById('kbSrch')?.value || '').toLowerCase();
   const list = kbFiles.filter(f => !q || f.name.toLowerCase().includes(q));
-
   if (!list.length) {
     grid.innerHTML = '<div style="font-size:13px;color:var(--text-muted);grid-column:1/-1;padding:20px 0;">No articles found.</div>';
     return;
   }
-
   grid.innerHTML = list.map(f => {
     const ext = f.filename?.split('.').pop()?.toUpperCase() || 'DOC';
     const date = f.modified ? new Date(f.modified).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
@@ -1434,8 +1047,7 @@ function openDoc(id, name, previewUrl, downloadUrl) {
   document.getElementById('docTitle').textContent = name;
   document.getElementById('docDownload').href = downloadUrl;
   document.getElementById('docFrame').src = previewUrl;
-  const overlay = document.getElementById('docOverlay');
-  overlay.style.display = 'flex';
+  document.getElementById('docOverlay').style.display = 'flex';
 }
 
 function closeDoc() {
@@ -1443,11 +1055,204 @@ function closeDoc() {
   document.getElementById('docFrame').src = '';
 }
 
+// ── State ──────────────────────────────────────────────────────────────────
+let CU = null, chatHist = [], chatBusy = false;
+
+// ── Login ──────────────────────────────────────────────────────────────────
+async function doLogin() {
+  const email = document.getElementById('emailIn').value.trim();
+  const pass = document.getElementById('passIn').value;
+  const errEl = document.getElementById('loginErr');
+  const btn = document.getElementById('loginBtn');
+  errEl.style.display = 'none';
+  btn.textContent = 'Signing in…'; btn.disabled = true;
+  try {
+    const r = await fetch('/api/auth', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: pass })
+    });
+    const d = await r.json();
+    if (!r.ok) {
+      errEl.style.display = 'block';
+      btn.textContent = 'Sign in to support portal'; btn.disabled = false;
+      return;
+    }
+    CU = d.customer;
+    document.getElementById('loginScreen').style.display = 'none';
+    const ps = document.getElementById('portalScreen');
+    ps.style.display = 'flex'; ps.classList.add('visible');
+    bootPortal();
+  } catch(e) {
+    errEl.textContent = 'Connection error. Please try again.';
+    errEl.style.display = 'block';
+    btn.textContent = 'Sign in to support portal'; btn.disabled = false;
+  }
+}
+
+function doLogout() {
+  CU = null; chatHist = [];
+  document.getElementById('chatMsgs').innerHTML = '';
+  document.getElementById('chatSugs').style.display = 'flex';
+  const ps = document.getElementById('portalScreen');
+  ps.style.display = 'none'; ps.classList.remove('visible');
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('emailIn').value = '';
+  document.getElementById('passIn').value = '';
+  document.getElementById('loginErr').style.display = 'none';
+  document.getElementById('loginBtn').textContent = 'Sign in to support portal';
+  document.getElementById('loginBtn').disabled = false;
+  goTo('rufus');
+}
+
+// ── Boot ───────────────────────────────────────────────────────────────────
+function bootPortal() {
+  const name = CU.name || '';
+  const first = name.split(' ')[0];
+  const inits = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  document.getElementById('topAv').textContent = inits;
+  document.getElementById('topName').textContent = name;
+  document.getElementById('greetingText').innerHTML = `Hey <strong>${first}</strong>, welcome back.`;
+  document.getElementById('greetingSub').textContent = `Rufus is online and ready to help with your ${CU.rig || 'simulator'}.`;
+
+  const fields = [
+    ['Motion platform', CU.motionPlatform, true],
+    ['Monitors', CU.monitors, false],
+    ['Resolution', CU.resolution, false],
+    ['Graphics card', CU.graphicsCard, false],
+    ['Wheelbase', CU.wheelbase, false],
+    ['Pedals', CU.pedals, false],
+    ['Add-ons', CU.addOns, false],
+    ['Purchase date', CU.purchaseDate, false],
+  ].filter(([, v]) => v);
+
+  document.getElementById('tktRig').innerHTML = fields.map(([k, v, badge]) => `
+    <div class="rig-row">
+      <span class="rig-key">${k}</span>
+      <span class="rig-val">${badge ? `<span class="rig-badge">${v}</span>` : v}</span>
+    </div>`).join('');
+
+  const profileFields = [
+    ['Simulator', CU.rig || '—'],
+    ['Motion platform', CU.motionPlatform || '—'],
+    ['Monitors', CU.monitors || '—'],
+    ['Resolution', CU.resolution || '—'],
+    ['Graphics card', CU.graphicsCard || '—'],
+    ['Wheelbase', CU.wheelbase || '—'],
+    ['Pedals', CU.pedals || '—'],
+    ['Add-ons', CU.addOns || '—'],
+    ['Purchase date', CU.purchaseDate || '—'],
+  ];
+  const mid = Math.ceil(profileFields.length / 2);
+  const buildCard = (items, label) => `
+    <div class="profile-card">
+      <div class="profile-card-label">${label}</div>
+      ${items.map(([k, v]) => `<div class="profile-row"><span class="profile-key">${k}</span><span class="profile-val">${v}</span></div>`).join('')}
+    </div>`;
+  document.getElementById('profileGrid').innerHTML =
+    buildCard(profileFields.slice(0, mid), 'System') +
+    buildCard(profileFields.slice(mid), 'Hardware');
+
+  loadKB();
+
+  addMsg('r', `Hey ${first}! I've got your <b>${CU.rig || 'simulator'}</b> pulled up${CU.motionPlatform ? ` — <b>${CU.motionPlatform}</b> motion` : ''}, <b>${CU.monitors || 'monitors'}</b>, <b>${CU.graphicsCard || 'GPU'}</b>. What's going on today?`);
+}
+
+// ── Nav ────────────────────────────────────────────────────────────────────
+function goTo(tab) {
+  document.querySelectorAll('.page').forEach(p => { p.classList.remove('active'); });
+  document.querySelectorAll('.sitem').forEach(s => s.classList.remove('active'));
+  const pg = document.getElementById('pg-' + tab);
+  const si = document.getElementById('si-' + tab);
+  if (pg) pg.classList.add('active');
+  if (si) si.classList.add('active');
+  document.getElementById('docOverlay').style.display = 'none';
+  if (tab === 'kb') loadKB();
+}
+
+// ── Chat ───────────────────────────────────────────────────────────────────
+function addMsg(role, html) {
+  const el = document.getElementById('chatMsgs');
+  const isU = role === 'u';
+  const inits = CU ? (CU.name || '').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'ME';
+  const d = document.createElement('div');
+  d.className = 'msg' + (isU ? ' u' : '');
+  d.innerHTML = `<div class="msg-av ${role}">${isU ? inits : 'R'}</div><div class="bubble ${role}">${html}</div>`;
+  el.appendChild(d); el.scrollTop = el.scrollHeight;
+}
+
+function showTyp() {
+  const el = document.getElementById('chatMsgs');
+  const d = document.createElement('div');
+  d.className = 'msg'; d.id = 'td';
+  d.innerHTML = `<div class="msg-av r">R</div><div class="tdots"><span></span><span></span><span></span></div>`;
+  el.appendChild(d); el.scrollTop = el.scrollHeight;
+}
+
+function hideTyp() { const e = document.getElementById('td'); if (e) e.remove(); }
+
+function fmtReply(t) {
+  t = t.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+  t = t.replace(/What you'?ll see:(.*?)(?=\n|$)/gi, '<div class="sc"><b>What you\'ll see:</b>$1</div>');
+  t = t.replace(/⚠️(.*?)(?=\n|$)/g, '<div class="wn">$1</div>');
+  t = t.replace(/\n(\d+)\.\s/g, '<br><b style="color:var(--red)">$1.</b> ');
+  t = t.replace(/\n•\s/g, '<br>• ');
+  t = t.replace(/\n\n/g, '<br><br>');
+  t = t.replace(/\n/g, '<br>');
+  return t;
+}
+
+async function qs(q) { document.getElementById('chatIn').value = q; doSend(); }
+
+async function doSend() {
+  if (chatBusy) return;
+  const inp = document.getElementById('chatIn');
+  const txt = inp.value.trim(); if (!txt) return;
+  document.getElementById('chatSugs').style.display = 'none';
+  addMsg('u', txt);
+  inp.value = ''; inp.style.height = 'auto';
+  chatHist.push({ role: 'user', content: txt });
+  chatBusy = true; document.getElementById('sendBtn').disabled = true;
+  showTyp();
+  try {
+    const r = await fetch('/api/chat', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: chatHist, customerProfile: CU })
+    });
+    const d = await r.json();
+    const rep = d.reply || "I'm having trouble connecting right now. Drop Nathaniel an email at nathaniel@podium1racing.com and he'll get you sorted.";
+    chatHist.push({ role: 'assistant', content: rep });
+    hideTyp(); addMsg('r', fmtReply(rep));
+  } catch(e) {
+    hideTyp();
+    addMsg('r', "I'm having trouble connecting right now. Drop Nathaniel an email at <b>nathaniel@podium1racing.com</b> and he'll get you sorted.");
+  }
+  chatBusy = false; document.getElementById('sendBtn').disabled = false;
+}
+
 // ── Ticket ─────────────────────────────────────────────────────────────────
-function submitTicket(){
-  const ok=document.getElementById('tktOk');
-  ok.style.display='block';
-  setTimeout(()=>ok.style.display='none',6000);
+function submitTicket() {
+  const desc = document.getElementById('tktDesc').value.trim();
+  const cat = document.getElementById('tktCat').value;
+  if (!desc) { alert('Please describe the issue before submitting.'); return; }
+  fetch('/api/ticket', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      customerName: CU?.name || '',
+      customerEmail: CU?.email || '',
+      rig: CU?.rig || '',
+      motionPlatform: CU?.motionPlatform || '',
+      monitors: CU?.monitors || '',
+      graphicsCard: CU?.graphicsCard || '',
+      wheelbase: CU?.wheelbase || '',
+      issueCategory: cat,
+      issueDescription: desc,
+      source: 'form'
+    })
+  });
+  const ok = document.getElementById('tktOk');
+  ok.style.display = 'block';
+  document.getElementById('tktDesc').value = '';
+  setTimeout(() => ok.style.display = 'none', 6000);
 }
 </script>
 </body>
