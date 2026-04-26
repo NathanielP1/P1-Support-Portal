@@ -303,6 +303,14 @@ button,input,select,textarea{font-family:var(--font);}
         Customers
         <span class="count" id="custCount">—</span>
       </div>
+      <div class="si" id="si-kb" onclick="goTo('kb')">
+  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2h8a1 1 0 011 1v10a1 1 0 01-1 1H4a1 1 0 01-1-1V3a1 1 0 011-1z"/><line x1="5" y1="6" x2="11" y2="6"/><line x1="5" y1="9" x2="9" y2="9"/></svg>
+  Knowledge Base
+</div>
+      <div class="si" id="si-kb" onclick="goTo('kb')">
+  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2h8a1 1 0 011 1v10a1 1 0 01-1 1H4a1 1 0 01-1-1V3a1 1 0 011-1z"/><line x1="5" y1="6" x2="11" y2="6"/><line x1="5" y1="9" x2="9" y2="9"/></svg>
+  Knowledge Base
+</div>
       <div class="si" id="si-conversations" onclick="goTo('conversations')">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2C4.686 2 2 4.462 2 7.5c0 1.656.726 3.144 1.882 4.18L3.5 14l2.38-1.19A6.14 6.14 0 008 13c3.314 0 6-2.462 6-5.5S11.314 2 8 2z"/></svg>
         Rufus Conversations
@@ -405,6 +413,50 @@ button,input,select,textarea{font-family:var(--font);}
         </div>
       </div>
 
+      <!-- KB PAGE -->
+<div class="page" id="pg-kb">
+  <div class="ph">Knowledge Base</div>
+  <div class="ps">Documents in the P1 KB Articles folder on Google Drive — upload files there to add them here</div>
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+    <a href="https://drive.google.com/drive/folders/10e83g-ROXyW5UkqqQSNM36U6nreiwNS7" target="_blank" class="btn btn-primary">Open KB Folder in Drive →</a>
+    <button class="btn btn-ghost" onclick="loadAdminKB()">↻ Refresh</button>
+  </div>
+  <div class="card">
+    <div style="overflow-x:auto;">
+      <table class="tbl">
+        <thead>
+          <tr><th>Document Name</th><th>Type</th><th>Last Modified</th><th></th><th></th></tr>
+        </thead>
+        <tbody id="kbAdminBody">
+          <tr><td colspan="5" class="empty">Loading KB documents...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+      <!-- KB PAGE -->
+<div class="page" id="pg-kb">
+  <div class="ph">Knowledge Base</div>
+  <div class="ps">Documents in the P1 KB Articles folder on Google Drive — upload files there to add them here</div>
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+    <a href="https://drive.google.com/drive/folders/10e83g-ROXyW5UkqqQSNM36U6nreiwNS7" target="_blank" class="btn btn-primary">Open KB Folder in Drive →</a>
+    <button class="btn btn-ghost" onclick="loadAdminKB()">↻ Refresh</button>
+  </div>
+  <div class="card">
+    <div style="overflow-x:auto;">
+      <table class="tbl">
+        <thead>
+          <tr><th>Document Name</th><th>Type</th><th>Last Modified</th><th></th><th></th></tr>
+        </thead>
+        <tbody id="kbAdminBody">
+          <tr><td colspan="5" class="empty">Loading KB documents...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+      
       <!-- CONVERSATIONS PAGE -->
       <div class="page" id="pg-conversations">
         <div class="ph">Rufus Conversations</div>
@@ -663,6 +715,11 @@ function bootPortal() {
   loadCustomers();
   loadConversations();
   loadStaff();
+  loadAdminKB();
+
+  if (ME.role !== 'admin') {
+    document.getElementById('si-staff').style.display = 'none';
+  }
 
   // Hide staff tab from support role
   if (ME.role !== 'admin') {
@@ -677,6 +734,7 @@ function goTo(tab) {
   document.getElementById('pg-' + tab)?.classList.add('on');
   document.getElementById('si-' + tab)?.classList.add('on');
   if (tab === 'analytics') loadAnalytics();
+  if (tab === 'kb') loadAdminKB();
 }
 
 // ── Supabase helper ────────────────────────────────────────────────────────
@@ -1216,6 +1274,50 @@ async function removeStaff(email, name) {
     loadStaff();
   } catch(e) {
     showNotif('Error: ' + e.message, 'err');
+  }
+}
+  async function loadAdminKB() {
+  try {
+    const r = await fetch('/api/kb');
+    const data = await r.json();
+    const files = data.files || [];
+    document.getElementById('kbAdminBody').innerHTML = files.length ? files.map(f => {
+      const ext = f.filename?.split('.').pop()?.toUpperCase() || 'DOC';
+      const date = f.modified ? new Date(f.modified).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
+      return `
+        <tr>
+          <td><span class="name">${f.name}</span></td>
+          <td><span class="badge-rig" style="background:rgba(255,255,255,0.05);color:var(--text-2);border-color:var(--border)">${ext}</span></td>
+          <td style="font-size:11px;color:var(--text-3)">${date}</td>
+          <td><a href="${f.previewUrl}" target="_blank" style="font-size:11px;color:var(--red);text-decoration:none;">Preview →</a></td>
+          <td><a href="${f.downloadUrl}" target="_blank" style="font-size:11px;color:var(--text-3);text-decoration:none;">↓ Download</a></td>
+        </tr>
+      `;
+    }).join('') : '<tr><td colspan="5" class="empty">No documents found. Upload .docx or PDF files to the P1 KB Articles folder in Google Drive.</td></tr>';
+  } catch(e) {
+    document.getElementById('kbAdminBody').innerHTML = '<tr><td colspan="5" class="empty">Failed to load. Check GOOGLE_API_KEY is set in Vercel.</td></tr>';
+  }
+}
+  async function loadAdminKB() {
+  try {
+    const r = await fetch('/api/kb');
+    const data = await r.json();
+    const files = data.files || [];
+    document.getElementById('kbAdminBody').innerHTML = files.length ? files.map(f => {
+      const ext = f.filename?.split('.').pop()?.toUpperCase() || 'DOC';
+      const date = f.modified ? new Date(f.modified).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
+      return `
+        <tr>
+          <td><span class="name">${f.name}</span></td>
+          <td><span class="badge-rig" style="background:rgba(255,255,255,0.05);color:var(--text-2);border-color:var(--border)">${ext}</span></td>
+          <td style="font-size:11px;color:var(--text-3)">${date}</td>
+          <td><a href="${f.previewUrl}" target="_blank" style="font-size:11px;color:var(--red);text-decoration:none;">Preview →</a></td>
+          <td><a href="${f.downloadUrl}" target="_blank" style="font-size:11px;color:var(--text-3);text-decoration:none;">↓ Download</a></td>
+        </tr>
+      `;
+    }).join('') : '<tr><td colspan="5" class="empty">No documents found. Upload .docx or PDF files to the P1 KB Articles folder in Google Drive.</td></tr>';
+  } catch(e) {
+    document.getElementById('kbAdminBody').innerHTML = '<tr><td colspan="5" class="empty">Failed to load. Check GOOGLE_API_KEY is set in Vercel.</td></tr>';
   }
 }
 </script>
