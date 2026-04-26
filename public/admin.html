@@ -377,7 +377,12 @@ button,input,select,textarea{font-family:var(--font);}
             <svg class="srch-ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6.5" cy="6.5" r="4"/><line x1="10" y1="10" x2="14" y2="14"/></svg>
             <input class="srch-in" id="custSearch" placeholder="Search customers..." oninput="filterCustomers()"/>
           </div>
-          <button class="btn btn-primary" onclick="openNewCustomer()">+ Add Customer</button>
+<button class="btn btn-primary" onclick="openNewCustomer()">+ Add Customer</button>
+<button class="btn btn-ghost" onclick="downloadCSVTemplate()">↓ CSV Template</button>
+<label class="btn btn-ghost" style="cursor:pointer;">
+  ↑ Import CSV
+  <input type="file" id="csvFileInput" accept=".csv" style="display:none;" onchange="importCSV(event)"/>
+</label>
         </div>
         <div class="card">
           <div style="overflow-x:auto;">
@@ -1013,6 +1018,102 @@ function showNotif(msg, type = 'ok') {
   } catch(e) {
     console.error('Analytics error:', e);
   }
+}
+  function downloadCSVTemplate() {
+  const headers = [
+    'name', 'email', 'password', 'rig', 'motion_platform',
+    'monitors', 'resolution', 'graphics_card', 'wheelbase',
+    'pedals', 'add_ons', 'purchase_date'
+  ];
+  const example = [
+    'Marcus Reid', 'marcus@email.com', 'p1customer2026', 'P1 Ultimate',
+    'D-BOX GS-5', '45" LG Ultragear OLED (triple)', '10320 × 1440',
+    'RTX 5090', 'Asetek Invicta 27Nm',
+    'Heusinkveld Ultimate+ + Simucube Active Pedal',
+    '5.1 Surround, Wind Kit', 'January 2026'
+  ];
+  const csv = [headers.join(','), example.join(',')].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'p1-customers-template.csv';
+  a.click(); URL.revokeObjectURL(url);
+}
+
+async function importCSV(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const text = await file.text();
+  const lines = text.trim().split('\n');
+  if (lines.length < 2) {
+    showNotif('CSV file is empty or has no data rows', 'err');
+    return;
+  }
+
+  const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/['"]/g, ''));
+  const rows = lines.slice(1);
+
+  let successCount = 0;
+  let failCount = 0;
+  const errors = [];
+
+  showNotif(`Importing ${rows.length} customer${rows.length > 1 ? 's' : ''}...`, 'ok');
+
+  for (const row of rows) {
+    if (!row.trim()) continue;
+
+    // Handle commas inside quoted fields
+    const values = [];
+    let current = '';
+    let inQuotes = false;
+    for (const char of row) {
+      if (char === '"') { inQuotes = !inQuotes; }
+      else if (char === ',' && !inQuotes) { values.push(current.trim()); current = ''; }
+      else { current += char; }
+    }
+    values.push(current.trim());
+
+    const customer = {};
+    headers.forEach((header, i) => {
+      customer[header] = (values[i] || '').replace(/^["']|["']$/g, '').trim();
+    });
+
+    if (!customer.email || !customer.name) {
+      failCount++;
+      errors.push(`Skipped row — missing name or email`);
+      continue;
+    }
+
+    try {
+      const r = await fetch('/api/manage-customer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'create', data: customer })
+      });
+      if (r.ok) { successCount++; }
+      else {
+        const d = await r.json();
+        failCount++;
+        errors.push(`${customer.email}: ${d.error || 'Failed'}`);
+      }
+    } catch(e) {
+      failCount++;
+      errors.push(`${customer.email}: Connection error`);
+    }
+  }
+
+  // Reset file input so same file can be re-imported if needed
+  event.target.value = '';
+
+  if (failCount === 0) {
+    showNotif(`✓ Imported ${successCount} customer${successCount > 1 ? 's' : ''} successfully`, 'ok');
+  } else {
+    showNotif(`${successCount} imported, ${failCount} failed — check console for details`, 'err');
+    console.log('Import errors:', errors);
+  }
+
+  loadCustomers();
 }
 </script>
 </body>
