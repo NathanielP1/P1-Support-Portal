@@ -322,6 +322,10 @@ button,input,select,textarea{font-family:var(--font);}
         <span class="soon">Beta</span>
       </div>
       <div class="ss">Team</div>
+<div class="si" id="si-training" onclick="goTo('training')">
+  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v4M8 11v.5"/></svg>
+  Train Rufus
+</div>
       <div class="si" id="si-analytics" onclick="goTo('analytics')">
   <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="10" width="3" height="5" rx="0.5"/><rect x="6" y="6" width="3" height="9" rx="0.5"/><rect x="11" y="2" width="3" height="13" rx="0.5"/></svg>
   Analytics
@@ -502,6 +506,49 @@ button,input,select,textarea{font-family:var(--font);}
   <div class="card">
     <div class="card-hd"><div class="card-title">Activity by Hour of Day</div></div>
     <div class="card-body" id="an-hours" style="display:flex;align-items:flex-end;gap:4px;height:80px;"></div>
+  </div>
+</div>
+
+      <!-- TRAINING PAGE -->
+<div class="page" id="pg-training">
+  <div class="ph">Train Rufus</div>
+  <div class="ps">Add knowledge snippets that Rufus automatically uses in every customer conversation</div>
+
+  <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:var(--r);padding:12px 16px;margin-bottom:18px;display:flex;gap:10px;align-items:flex-start;">
+    <div style="font-size:18px;flex-shrink:0;margin-top:1px;">💡</div>
+    <div>
+      <div style="font-size:12px;font-weight:500;color:var(--text-2);margin-bottom:3px;">How this works</div>
+      <div style="font-size:11px;color:var(--text-3);line-height:1.7;">
+        Snippets are short pieces of information your team adds here — things like product updates, pricing changes, new procedures, or anything Rufus should know right now. Every time a customer starts a conversation, Rufus reads all active snippets automatically and uses them to answer questions. Think of it as a sticky note board that Rufus checks before every chat. Snippets do not permanently change Rufus's core knowledge — they layer on top of it. Deleting a snippet removes it from future conversations immediately.
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:14px;">
+    <div class="card-hd"><div class="card-title">Add New Snippet</div></div>
+    <div class="card-body" style="display:flex;flex-direction:column;gap:12px;">
+      <div>
+        <label class="field-label">Title</label>
+        <input class="field-input" id="snip-title" placeholder="e.g. P1 Ultimate now ships with RTX 5090 Ti"/>
+      </div>
+      <div>
+        <label class="field-label">Content</label>
+        <textarea class="field-input" id="snip-content" rows="4" style="resize:vertical;line-height:1.6;" placeholder="Write exactly what Rufus should know. Be specific and factual. Example: As of May 2026, the P1 Ultimate ships with the RTX 5090 Ti instead of the RTX 5090. Pricing remains the same at $56,999."></textarea>
+      </div>
+      <div>
+        <button class="btn btn-primary" onclick="saveSnippet()">Add snippet</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd">
+      <div class="card-title">Active Snippets</div>
+      <button class="btn btn-ghost btn-sm" onclick="loadSnippets()">↻ Refresh</button>
+    </div>
+    <div class="card-body" id="snippetList">
+      <div class="empty">Loading snippets...</div>
+    </div>
   </div>
 </div>
       
@@ -716,6 +763,7 @@ function bootPortal() {
   loadConversations();
   loadStaff();
   loadAdminKB();
+  loadSnippets();
 
   if (ME.role !== 'admin') {
     document.getElementById('si-staff').style.display = 'none';
@@ -735,6 +783,7 @@ function goTo(tab) {
   document.getElementById('si-' + tab)?.classList.add('on');
   if (tab === 'analytics') loadAnalytics();
   if (tab === 'kb') loadAdminKB();
+  if (tab === 'training') loadSnippets();
 }
 
 // ── Supabase helper ────────────────────────────────────────────────────────
@@ -1318,6 +1367,59 @@ async function removeStaff(email, name) {
     }).join('') : '<tr><td colspan="5" class="empty">No documents found. Upload .docx or PDF files to the P1 KB Articles folder in Google Drive.</td></tr>';
   } catch(e) {
     document.getElementById('kbAdminBody').innerHTML = '<tr><td colspan="5" class="empty">Failed to load. Check GOOGLE_API_KEY is set in Vercel.</td></tr>';
+  }
+}
+  async function loadSnippets() {
+  try {
+    const r = await fetch('/api/snippets');
+    const data = await r.json();
+    const snippets = data.snippets || [];
+    document.getElementById('snippetList').innerHTML = snippets.length ? snippets.map(s => `
+      <div style="padding:13px 0;border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:flex-start;">
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:4px;">${s.title}</div>
+          <div style="font-size:12px;color:var(--text-3);line-height:1.6;white-space:pre-wrap;">${s.content}</div>
+          <div style="font-size:10px;color:var(--text-4);margin-top:6px;">Added ${s.created_at ? new Date(s.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" style="flex-shrink:0;color:rgba(204,17,34,0.7);border-color:rgba(204,17,34,0.2);" onclick="deleteSnippet('${s.id}', '${s.title.replace(/'/g, "\\'")}')">Remove</button>
+      </div>
+    `).join('') : '<div class="empty" style="padding:20px 0;">No snippets yet. Add one above to start training Rufus.</div>';
+  } catch(e) {
+    document.getElementById('snippetList').innerHTML = '<div class="empty">Failed to load snippets.</div>';
+  }
+}
+
+async function saveSnippet() {
+  const title = document.getElementById('snip-title').value.trim();
+  const content = document.getElementById('snip-content').value.trim();
+  if (!title || !content) { showNotif('Title and content are both required', 'err'); return; }
+  try {
+    const r = await fetch('/api/snippets', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, content })
+    });
+    if (!r.ok) throw new Error('Failed');
+    document.getElementById('snip-title').value = '';
+    document.getElementById('snip-content').value = '';
+    showNotif('Snippet added — Rufus will use this in all future conversations', 'ok');
+    loadSnippets();
+  } catch(e) {
+    showNotif('Failed to save snippet', 'err');
+  }
+}
+
+async function deleteSnippet(id, title) {
+  if (!confirm(`Remove "${title}"? Rufus will stop using this snippet immediately.`)) return;
+  try {
+    const r = await fetch('/api/snippets', {
+      method: 'DELETE', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
+    if (!r.ok) throw new Error('Failed');
+    showNotif('Snippet removed', 'ok');
+    loadSnippets();
+  } catch(e) {
+    showNotif('Failed to remove snippet', 'err');
   }
 }
 </script>
