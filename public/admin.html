@@ -454,14 +454,17 @@ button,input,select,textarea{font-family:var(--font);}
 </div>
       
       <!-- STAFF PAGE -->
-      <div class="page" id="pg-staff">
-        <div class="ph">Staff</div>
-        <div class="ps">Team members with access to this portal</div>
-        <div class="card">
+<div class="page" id="pg-staff">
+  <div class="ph">Staff</div>
+  <div class="ps">Team members with access to this portal</div>
+  <div style="margin-bottom:14px;">
+    <button class="btn btn-primary" onclick="openNewStaff()">+ Add Staff Member</button>
+  </div>
+  <div class="card">
           <div style="overflow-x:auto;">
             <table class="tbl">
               <thead>
-                <tr><th>Name</th><th>Email</th><th>Role</th><th>Added</th></tr>
+                <tr><th>Name</th><th>Email</th><th>Role</th><th>Added</th><th></th></tr>
               </thead>
               <tbody id="staffBody">
                 <tr><td colspan="4" class="empty">Loading staff...</td></tr>
@@ -475,6 +478,41 @@ button,input,select,textarea{font-family:var(--font);}
   </div>
 </div>
 
+  <!-- STAFF MODAL -->
+<div id="staffModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;padding:20px;overflow-y:auto;backdrop-filter:blur(4px);">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-hd">
+      <div class="modal-title">Add Staff Member</div>
+      <div class="modal-close" onclick="closeStaffModal()">✕</div>
+    </div>
+    <div class="modal-body" style="grid-template-columns:1fr;">
+      <div>
+        <label class="field-label">Full Name</label>
+        <input class="field-input" id="sf-name" placeholder="Jack Weaver"/>
+      </div>
+      <div>
+        <label class="field-label">Email</label>
+        <input class="field-input" id="sf-email" type="email" placeholder="jack@podium1racing.com"/>
+      </div>
+      <div>
+        <label class="field-label">Password</label>
+        <input class="field-input" id="sf-password" placeholder="p1support2026"/>
+      </div>
+      <div>
+        <label class="field-label">Role</label>
+        <select class="field-input" id="sf-role">
+          <option value="support">Support</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeStaffModal()">Cancel</button>
+      <button class="btn btn-primary" id="staffSaveBtn" onclick="saveStaff()">Add staff member</button>
+    </div>
+  </div>
+</div>
+  
   <!-- CUSTOMER MODAL -->
 <div id="custModal">
   <div class="modal">
@@ -561,6 +599,7 @@ button,input,select,textarea{font-family:var(--font);}
 </div>
 
 <div class="notif" id="notif"></div>
+
 
 <script>
 // ── State ──────────────────────────────────────────────────────────────────
@@ -922,11 +961,12 @@ async function loadStaff() {
           <td style="font-size:11px;color:var(--text-3)">${s.email}</td>
           <td><span class="badge-rig" style="background:rgba(255,255,255,0.05);color:var(--text-2);border-color:var(--border)">${s.role || 'support'}</span></td>
           <td style="font-size:11px;color:var(--text-3)">${s.created_at ? new Date(s.created_at).toLocaleDateString() : '—'}</td>
+          <td>${ME.role === 'admin' && s.email !== ME.email ? `<button class="btn btn-ghost btn-sm" onclick="removeStaff('${s.email}', '${s.name || s.email}')">Remove</button>` : ''}</td>
         </tr>
       `).join('');
     }
   } catch(e) {
-    document.getElementById('staffBody').innerHTML = '<tr><td colspan="4" class="empty">Failed to load staff.</td></tr>';
+    document.getElementById('staffBody').innerHTML = '<tr><td colspan="5" class="empty">Failed to load staff.</td></tr>';
   }
 }
 
@@ -1118,6 +1158,65 @@ async function importCSV(event) {
   }
 
   loadCustomers();
+}
+  function openNewStaff() {
+  document.getElementById('sf-name').value = '';
+  document.getElementById('sf-email').value = '';
+  document.getElementById('sf-password').value = '';
+  document.getElementById('sf-role').value = 'support';
+  document.getElementById('staffModal').style.display = 'block';
+}
+
+function closeStaffModal() {
+  document.getElementById('staffModal').style.display = 'none';
+}
+
+async function saveStaff() {
+  const btn = document.getElementById('staffSaveBtn');
+  btn.textContent = 'Saving…'; btn.disabled = true;
+  const payload = {
+    name: document.getElementById('sf-name').value.trim(),
+    email: document.getElementById('sf-email').value.trim().toLowerCase(),
+    password: document.getElementById('sf-password').value,
+    role: document.getElementById('sf-role').value,
+  };
+  if (!payload.name || !payload.email || !payload.password) {
+    showNotif('Name, email and password are required', 'err');
+    btn.textContent = 'Add staff member'; btn.disabled = false;
+    return;
+  }
+  try {
+    const r = await fetch('/api/manage-staff', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'create', data: payload })
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Failed');
+    showNotif('Staff member added', 'ok');
+    closeStaffModal();
+    loadStaff();
+  } catch(e) {
+    showNotif('Error: ' + e.message, 'err');
+  }
+  btn.textContent = 'Add staff member'; btn.disabled = false;
+}
+
+async function removeStaff(email, name) {
+  if (!confirm(`Remove ${name} from the team portal? They will no longer be able to log in.`)) return;
+  try {
+    const r = await fetch('/api/manage-staff', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'remove', email })
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Failed');
+    showNotif(`${name} removed`, 'ok');
+    loadStaff();
+  } catch(e) {
+    showNotif('Error: ' + e.message, 'err');
+  }
 }
 </script>
 </body>
