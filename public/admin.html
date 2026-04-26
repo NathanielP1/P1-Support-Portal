@@ -620,7 +620,7 @@ function bootPortal() {
   document.getElementById('tbAv').textContent = inits;
   document.getElementById('tbName').textContent = name;
   document.getElementById('tbRole').textContent = ME.role || 'support';
-loadTickets();
+  loadTickets();
   loadCustomers();
   loadConversations();
   loadStaff();
@@ -629,6 +629,7 @@ loadTickets();
   if (ME.role !== 'admin') {
     document.getElementById('si-staff').style.display = 'none';
   }
+}
 
 // ── Nav ────────────────────────────────────────────────────────────────────
 function goTo(tab) {
