@@ -183,11 +183,32 @@ export default async function handler(req, res) {
 
   try {
     const { messages, customerProfile } = req.body;
-    if (!messages || !Array.isArray(messages)) {
-      return res.status(400).json({ error: 'Messages array required' });
-    }
+  if (!messages || !Array.isArray(messages)) {
+    return res.status(400).json({ error: 'Messages array required' });
+  }
 
-    let systemPrompt = SYSTEM_PROMPT;
+  // Pull active knowledge snippets from Supabase and inject into prompt
+  let systemPrompt = SYSTEM_PROMPT;
+  try {
+    const snipRes = await fetch(
+      `${process.env.SUPABASE_URL}/rest/v1/knowledge_snippets?active=eq.true&select=title,content`,
+      {
+        headers: {
+          'apikey': process.env.SUPABASE_KEY,
+          'Authorization': `Bearer ${process.env.SUPABASE_KEY}`,
+          'Accept': 'application/json',
+        }
+      }
+    );
+    const snipData = await snipRes.json();
+    if (Array.isArray(snipData) && snipData.length > 0) {
+      const injected = snipData.map(s => `### ${s.title}\n${s.content}`).join('\n\n');
+      systemPrompt = `${SYSTEM_PROMPT}\n\n═══════════════════════════════════════════════\nLIVE KNOWLEDGE UPDATES (added by P1 team — treat as current fact)\n═══════════════════════════════════════════════\n${injected}`;
+    }
+  } catch(e) {
+    console.error('Failed to load knowledge snippets:', e);
+    // Continue without snippets if fetch fails
+  }
     if (customerProfile) {
       const rigCtx = Object.entries(customerProfile)
         .filter(([k, v]) => v && k !== 'password' && k !== 'email')
