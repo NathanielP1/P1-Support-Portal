@@ -292,8 +292,32 @@ export default async function handler(req, res) {
       }
     }
 
-    return res.status(200).json({ reply, ticketCreated });
+// Log conversation to Supabase
+    try {
+      const logUrl = `${process.env.SUPABASE_URL}/rest/v1/conversations`;
+      const headers = {
+        'apikey': process.env.SUPABASE_KEY,
+        'Authorization': `Bearer ${process.env.SUPABASE_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal',
+      };
+      const customerEmail = customerProfile?.email || '';
+      const customerName = customerProfile?.name || '';
+      // Log customer message
+      await fetch(logUrl, {
+        method: 'POST', headers,
+        body: JSON.stringify({ customer_email: customerEmail, customer_name: customerName, role: 'user', content: messages[messages.length - 1]?.content || '' })
+      });
+      // Log Rufus reply
+      await fetch(logUrl, {
+        method: 'POST', headers,
+        body: JSON.stringify({ customer_email: customerEmail, customer_name: customerName, role: 'assistant', content: reply })
+      });
+    } catch(logErr) {
+      console.error('Conversation log error:', logErr);
+    }
 
+    return res.status(200).json({ reply, ticketCreated });
   } catch (error) {
     console.error('Chat error:', error);
     return res.status(500).json({
