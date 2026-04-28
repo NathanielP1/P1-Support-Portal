@@ -549,7 +549,7 @@ function CustomerLookup({me}){
   const custTickets=active?tickets.filter(t=>t.email&&active.email&&t.email.toLowerCase()===active.email.toLowerCase()):[];
 
   const save=async()=>{
-    await fetch('/api/manage-customer',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'update',email:active.email,...editData})});
+    await fetch('/api/customers',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'update',email:active.email,...editData})});
     setCustomers(c=>c.map(x=>x.email===active.email?{...x,...editData}:x));
     setActive(a=>({...a,...editData}));
     setShowModal(false);
@@ -1007,10 +1007,10 @@ function StaffPage(){
 
   const add=async()=>{
     setSaving(true);
-    await fetch('/api/manage-staff',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'create',...form})});
+    await fetch('/api/staff',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'create',...form})});
     setSaving(false);setShowAdd(false);setForm({name:'',email:'',password:'',role:'support'});load();
   };
-  const remove=async email=>{if(!confirm('Remove this staff member?'))return;await fetch('/api/manage-staff',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'remove',email})});load()};
+  const remove=async email=>{if(!confirm('Remove this staff member?'))return;await fetch('/api/staff',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'remove',email})});load()};
 
   return(
     <div className="st-page">

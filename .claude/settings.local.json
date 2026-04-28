@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__40537f5b-313c-485e-ad9a-f9ad72d416af__search_files",
+      "mcp__40537f5b-313c-485e-ad9a-f9ad72d416af__read_file_content",
+      "Bash(git clone *)",
+      "Bash(gh auth *)",
+      "Bash(gh repo *)",
+      "Bash(git --version)",
+      "Bash(git config *)",
+      "Bash(git remote *)",
+      "Bash(git fetch *)",
+      "Read(//c/Users/Owner/Downloads/**)",
+      "Bash(unzip -o \"Podium 1 Racing Design System.zip\" -d \"/c/Users/Owner/Downloads/design-customer\")",
+      "Bash(unzip -o \"Podium 1 Racing Design System \\(1\\).zip\" -d \"/c/Users/Owner/Downloads/design-staff\")",
+      "Bash(git checkout *)",
+      "Bash(git pull *)",
+      "Bash(cp /c/Users/Owner/Downloads/design-customer/_export/customer-portal/logomark.png /c/Users/Owner/Documents/Claude/p1-support-portal/public/)",
+      "Bash(cp /c/Users/Owner/Downloads/design-customer/_export/customer-portal/wordmark.png /c/Users/Owner/Documents/Claude/p1-support-portal/public/)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
+    ]
+  }
+}

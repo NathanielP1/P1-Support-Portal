@@ -585,7 +585,7 @@ function TicketPage({user}){
   const submit=async e=>{
     e.preventDefault();if(!desc.trim())return;setStatus('loading');
     try{
-      const r=await fetch('/api/ticket',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:user.name,email:user.email,rig:user.rig,issue:desc,typeOfHelp:cat,motionPlatform:user.motionPlatform,monitors:user.monitors,resolution:user.resolution,graphicsCard:user.graphicsCard,wheelbase:user.wheelbase,pedals:user.pedals,addOns:user.addOns,purchaseDate:user.purchaseDate})});
+      const r=await fetch('/api/tickets',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:user.name,email:user.email,rig:user.rig,issue:desc,typeOfHelp:cat,motionPlatform:user.motionPlatform,monitors:user.monitors,resolution:user.resolution,graphicsCard:user.graphicsCard,wheelbase:user.wheelbase,pedals:user.pedals,addOns:user.addOns,purchaseDate:user.purchaseDate})});
       if(r.ok){setStatus('done')}else{setStatus('error')}
     }catch{setStatus('error');}
   };
