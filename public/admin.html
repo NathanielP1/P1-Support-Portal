@@ -287,6 +287,33 @@ button,input,textarea,select{font-family:inherit;color:inherit}
 .st-video-card-body{padding:12px 14px}
 .st-video-title{font-size:13px;font-weight:600;color:#fff;margin-bottom:4px}
 .st-video-notes{font-size:12px;color:rgba(255,252,246,0.62);line-height:1.5;margin-bottom:8px}
+/* SEARCH MODAL */
+.st-search-modal{width:100%;max-width:580px;background:#0d0d10;border:1px solid rgba(255,255,255,0.10);border-radius:12px;box-shadow:0 30px 80px rgba(0,0,0,0.7);overflow:hidden;animation:fadeUp .15s cubic-bezier(.4,0,.2,1) both}
+.st-search-modal-bar{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.06)}
+.st-search-modal-bar input{flex:1;background:transparent;border:none;outline:none;font-size:15px;color:#fff}
+.st-search-modal-bar input::placeholder{color:rgba(255,252,246,0.28)}
+.st-search-results{max-height:380px;overflow-y:auto;padding:6px 6px 8px}
+.st-search-sect{font-size:10px;font-weight:500;color:rgba(255,252,246,0.28);letter-spacing:0.10em;padding:8px 10px 4px;text-transform:uppercase}
+.st-search-result{display:flex;align-items:center;gap:9px;padding:8px 10px;background:transparent;border:none;border-radius:7px;color:rgba(255,252,246,0.86);font-size:13px;cursor:pointer;text-align:left;width:100%;transition:background .1s ease}
+.st-search-result:hover,.st-search-result:focus{background:rgba(255,255,255,0.05);outline:none}
+.st-search-result svg{color:rgba(255,252,246,0.40);flex-shrink:0}
+.st-search-result-meta{margin-left:auto;font-size:11px;color:rgba(255,252,246,0.35);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px}
+.st-search-empty{padding:28px;text-align:center;font-size:13px;color:rgba(255,252,246,0.40)}
+.st-search-hints{display:flex;gap:16px;padding:9px 16px;font-size:11px;color:rgba(255,252,246,0.28);border-top:1px solid rgba(255,255,255,0.05)}
+/* CONVERSATIONS COLLAPSIBLE */
+.st-conv-customer{margin-bottom:10px;background:rgba(255,255,255,0.015);border:1px solid rgba(255,255,255,0.06);border-radius:10px;overflow:hidden}
+.st-conv-cust-head{display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;background:transparent;border:none;text-align:left;width:100%;transition:background .12s ease}
+.st-conv-cust-head:hover{background:rgba(255,255,255,0.025)}
+.st-conv-sess-body{padding:0 14px 10px}
+.st-conv-sess-toggle{display:flex;align-items:center;gap:6px;padding:7px 0 5px;cursor:pointer;background:transparent;border:none;text-align:left;width:100%;font-size:10px;font-weight:500;color:rgba(255,252,246,0.30);letter-spacing:0.08em;text-transform:uppercase;transition:color .12s ease}
+.st-conv-sess-toggle:hover{color:rgba(255,252,246,0.55)}
+/* ANALYTICS EXTRAS */
+.st-hour-chart{display:flex;align-items:flex-end;gap:2px;height:56px;padding:0 2px}
+.st-hour-bar{flex:1;background:rgba(204,17,34,0.35);border-radius:2px 2px 0 0;min-height:2px;cursor:default;transition:background .1s ease}
+.st-hour-bar:hover{background:#CC1122}
+.st-rufus-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:12px}
+.st-rufus-row:last-child{border-bottom:none}
+.st-rufus-rank{font-family:var(--font-mono);font-size:10px;color:rgba(255,252,246,0.28);width:16px;text-align:right;flex-shrink:0}
 /* MOBILE OVERLAY */
 .st-mob-ham{display:none;position:fixed;z-index:400;top:calc(10px + env(safe-area-inset-top));left:12px;width:38px;height:38px;background:#0f0f12;border:1px solid rgba(255,255,255,0.10);border-radius:9px;align-items:center;justify-content:center;flex-direction:column;gap:3px;cursor:pointer;padding:8px}
 .st-mob-ham span{display:block;width:16px;height:2px;background:rgba(255,252,246,0.86);border-radius:1px}
@@ -397,7 +424,7 @@ function Login({onSignIn}){
 }
 
 // ── SIDEBAR ──────────────────────────────────────────────────────────────
-function Sidebar({tab,setTab,me,collapsed,setCollapsed,openCount}){
+function Sidebar({tab,setTab,me,collapsed,setCollapsed,openCount,onOpenSearch}){
   const nav=[
     {k:'queue',     l:'Ticket Queue',     i:I.Inbox, kbd:'Q', badge:openCount},
     {k:'customers', l:'Customer Lookup',  i:I.User,  kbd:'C'},
@@ -422,7 +449,7 @@ function Sidebar({tab,setTab,me,collapsed,setCollapsed,openCount}){
         )}
       </div>
       {!collapsed&&(
-        <div className="st-side-search"><I.Search width="13" height="13"/><span style={{flex:1,fontSize:12,color:'rgba(255,252,246,0.40)'}}>Search</span><Kbd k="Ctrl K"/></div>
+        <div className="st-side-search" onClick={onOpenSearch} style={{cursor:'pointer'}}><I.Search width="13" height="13"/><span style={{flex:1,fontSize:12,color:'rgba(255,252,246,0.40)'}}>Search</span><Kbd k="Ctrl K"/></div>
       )}
       {!collapsed&&<div className="st-side-section">SUPPORT</div>}
       <nav className="st-nav">
@@ -725,34 +752,136 @@ function CustomerLookup({me}){
   );
 }
 
+// ── SEARCH MODAL ─────────────────────────────────────────────────────────
+function SearchModal({onClose,setTab}){
+  const[q,setQ]=useState('');
+  const[tickets,setTickets]=useState([]);
+  const[customers,setCustomers]=useState([]);
+  const[kb,setKb]=useState([]);
+  const ref=useRef(null);
+  useEffect(()=>{
+    ref.current?.focus();
+    fetch('/api/tickets').then(r=>r.json()).then(d=>setTickets(d.tickets||[])).catch(()=>{});
+    fetch('/api/customers').then(r=>r.json()).then(d=>setCustomers(d.customers||[])).catch(()=>{});
+    fetch('/api/kb').then(r=>r.json()).then(d=>setKb(d.files||[])).catch(()=>{});
+  },[]);
+  useEffect(()=>{const h=e=>{if(e.key==='Escape')onClose()};window.addEventListener('keydown',h);return()=>window.removeEventListener('keydown',h);},[onClose]);
+  const sq=q.toLowerCase().trim();
+  const mT=sq?tickets.filter(t=>t.name?.toLowerCase().includes(sq)||t.email?.toLowerCase().includes(sq)||t.issue?.toLowerCase().includes(sq)).slice(0,4):[];
+  const mC=sq?customers.filter(c=>c.name?.toLowerCase().includes(sq)||c.email?.toLowerCase().includes(sq)||c.rig?.toLowerCase().includes(sq)).slice(0,4):[];
+  const mK=sq?kb.filter(f=>f.name?.toLowerCase().includes(sq)).slice(0,4):[];
+  const noResults=sq&&mT.length===0&&mC.length===0&&mK.length===0;
+  const go=t=>{setTab(t);onClose()};
+  return(
+    <div className="st-overlay" style={{alignItems:'flex-start',paddingTop:'12vh'}} onClick={onClose}>
+      <div className="st-search-modal" onClick={e=>e.stopPropagation()}>
+        <div className="st-search-modal-bar">
+          <I.Search width="15" height="15" style={{color:'rgba(255,252,246,0.45)',flexShrink:0}}/>
+          <input ref={ref} value={q} onChange={e=>setQ(e.target.value)} placeholder="Search tickets, customers, articles…" autoComplete="off"/>
+          <kbd style={{fontFamily:'var(--font-mono)',fontSize:10,padding:'2px 6px',borderRadius:4,background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.08)',color:'rgba(255,252,246,0.35)'}}>ESC</kbd>
+        </div>
+        {sq&&(
+          <div className="st-search-results">
+            {noResults&&<div className="st-search-empty">No results for "{q}"</div>}
+            {mT.length>0&&<><div className="st-search-sect">Tickets</div>{mT.map(t=><button key={t.id||t.ticketNum} className="st-search-result" onClick={()=>go('queue')}><I.Inbox width="13" height="13"/><span style={{flex:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{t.name||t.email||'Unknown'}</span><span className="st-search-result-meta">{t.issue?.slice(0,50)||t.typeOfHelp||'—'}</span></button>)}</>}
+            {mC.length>0&&<><div className="st-search-sect">Customers</div>{mC.map(c=><button key={c.email||c.id} className="st-search-result" onClick={()=>go('customers')}><I.User width="13" height="13"/><span style={{flex:1}}>{c.name}</span><span className="st-search-result-meta">{c.email}</span></button>)}</>}
+            {mK.length>0&&<><div className="st-search-sect">Knowledge Base</div>{mK.map(f=><button key={f.id} className="st-search-result" onClick={()=>go('kb')}><I.Book width="13" height="13"/><span style={{flex:1}}>{f.name}</span><span className="st-search-result-meta">{f.category||'Article'}</span></button>)}</>}
+          </div>
+        )}
+        {!sq&&<div className="st-search-hints"><span>Start typing to search</span><span style={{marginLeft:'auto'}}>ESC to close</span></div>}
+      </div>
+    </div>
+  );
+}
+
 // ── CONVERSATIONS ─────────────────────────────────────────────────────────
 function Conversations(){
   const[convs,setConvs]=useState([]);
   const[loading,setLoading]=useState(true);
+  const[expanded,setExpanded]=useState({});
+  const[sessExp,setSessExp]=useState({});
   useEffect(()=>{fetch('/api/conversations').then(r=>r.json()).then(d=>{setConvs(d.conversations||[]);setLoading(false)}).catch(()=>setLoading(false))},[]);
-  const grouped={};
-  convs.forEach(c=>{
-    const key=(c.customer_email||'unknown')+'|'+(c.created_at||'').slice(0,10);
-    if(!grouped[key])grouped[key]={email:c.customer_email||'Unknown',date:(c.created_at||'').slice(0,10),msgs:[]};
-    grouped[key].msgs.push(c);
-  });
+
+  const custMap=useMemo(()=>{
+    const m={};
+    convs.forEach(c=>{
+      const email=c.customer_email||'unknown';
+      const date=(c.created_at||'').slice(0,10);
+      if(!m[email])m[email]={email,name:c.customer_name||email,latestTs:'',sessions:{},totalMsgs:0};
+      const sk=email+'|'+date;
+      if(!m[email].sessions[sk])m[email].sessions[sk]={date,msgs:[],latestTs:''};
+      m[email].sessions[sk].msgs.push(c);
+      m[email].totalMsgs++;
+      const ts=c.created_at||'';
+      if(ts>m[email].latestTs)m[email].latestTs=ts;
+      if(ts>m[email].sessions[sk].latestTs)m[email].sessions[sk].latestTs=ts;
+    });
+    return m;
+  },[convs]);
+
+  const custList=useMemo(()=>Object.values(custMap).sort((a,b)=>b.latestTs.localeCompare(a.latestTs)),[custMap]);
+
+  useEffect(()=>{
+    if(custList.length>0&&Object.keys(expanded).length===0){
+      const first=custList[0].email;
+      setExpanded({[first]:true});
+      const firstSess=Object.values(custList[0].sessions||{})[0];
+      if(firstSess)setSessExp({[first+'|'+firstSess.date]:true});
+    }
+  },[custList]);
+
+  const toggleCust=email=>setExpanded(e=>({...e,[email]:!e[email]}));
+  const toggleSess=sk=>setSessExp(s=>({...s,[sk]:s[sk]===false?true:false}));
+
   return(
     <div className="st-page">
-      <PageHead eyebrow="SUPPORT · RUFUS" title="Conversations" sub="All RUFUS chat sessions across customers."/>
+      <PageHead eyebrow="SUPPORT · RUFUS" title="Conversations" sub={`${custList.length} customer${custList.length!==1?'s':''} · ${convs.length} total messages`}/>
       {loading&&<div className="st-loading"><Spin/> Loading conversations…</div>}
-      {!loading&&Object.values(grouped).slice(0,20).map((sess,i)=>(
-        <div key={i} className="st-conv-session">
-          <div className="st-conv-session-head"><span className="st-conv-session-cust">{sess.email}</span><span style={{marginLeft:'auto',fontSize:11,color:'rgba(255,252,246,0.40)',fontFamily:'var(--font-mono)'}}>{sess.date}</span></div>
-          {sess.msgs.map((m,j)=>(
-            <div key={j} className={`st-conv-msg${m.role==='user'?' user':''}`}>
-              {m.role!=='user'&&<Av initials="RF" size={22} tone="blue"/>}
-              <div className={`st-conv-bubble ${m.role==='user'?'st-conv-bubble-u':'st-conv-bubble-a'}`}>{m.content||m.message||''}</div>
-              {m.role==='user'&&<Av initials={initials(m.customer_name||m.customer_email||'?')} size={22}/>}
-            </div>
-          ))}
-        </div>
-      ))}
-      {!loading&&Object.keys(grouped).length===0&&<div className="st-empty">No conversations yet.</div>}
+      {!loading&&custList.map(cust=>{
+        const isOpen=!!expanded[cust.email];
+        const sessArr=Object.values(cust.sessions).sort((a,b)=>b.latestTs.localeCompare(a.latestTs));
+        return(
+          <div key={cust.email} className="st-conv-customer">
+            <button className="st-conv-cust-head" onClick={()=>toggleCust(cust.email)}>
+              <Av initials={initials(cust.name)} size={28}/>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:13,fontWeight:600,color:'#fff',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{cust.name}</div>
+                <div style={{fontSize:11,color:'rgba(255,252,246,0.45)'}}>{cust.email}</div>
+              </div>
+              <div style={{display:'flex',alignItems:'center',gap:8,flexShrink:0}}>
+                <Pill tone="ghost">{sessArr.length} session{sessArr.length!==1?'s':''}</Pill>
+                <span style={{fontSize:11,color:'rgba(255,252,246,0.35)',fontFamily:'var(--font-mono)'}}>{cust.totalMsgs} msgs</span>
+                <I.ChevD width="13" height="13" style={{color:'rgba(255,252,246,0.40)',transform:isOpen?'rotate(180deg)':'none',transition:'transform .2s ease',flexShrink:0}}/>
+              </div>
+            </button>
+            {isOpen&&(
+              <div className="st-conv-sess-body">
+                {sessArr.map(sess=>{
+                  const sk=cust.email+'|'+sess.date;
+                  const sessOpen=sessExp[sk]!==false;
+                  return(
+                    <div key={sk} style={{marginBottom:6}}>
+                      <button className="st-conv-sess-toggle" onClick={()=>toggleSess(sk)}>
+                        <I.ChevD width="10" height="10" style={{transform:sessOpen?'none':'rotate(-90deg)',transition:'transform .2s ease'}}/>
+                        SESSION · {sess.date}
+                        <span style={{marginLeft:'auto',fontWeight:400}}>{sess.msgs.length} messages</span>
+                      </button>
+                      {sessOpen&&sess.msgs.map((m,j)=>(
+                        <div key={j} className={`st-conv-msg${m.role==='user'?' user':''}`}>
+                          {m.role!=='user'&&<Av initials="RF" size={22} tone="blue"/>}
+                          <div className={`st-conv-bubble ${m.role==='user'?'st-conv-bubble-u':'st-conv-bubble-a'}`}>{m.content||m.message||''}</div>
+                          {m.role==='user'&&<Av initials={initials(m.customer_name||m.customer_email||'?')} size={22}/>}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        );
+      })}
+      {!loading&&custList.length===0&&<div className="st-empty">No conversations yet.</div>}
     </div>
   );
 }
@@ -1047,23 +1176,48 @@ function Analytics(){
     fetch('/api/conversations').then(r=>r.json()).then(d=>setConvs(d.conversations||[])).catch(()=>{});
     fetch('/api/tickets').then(r=>r.json()).then(d=>setTickets(d.tickets||[])).catch(()=>{});
   },[]);
+
   const openCount=tickets.filter(t=>/open|new/i.test(t.status||'')).length+tickets.filter(t=>/progress|working/i.test(t.status||'')).length;
   const cats={};tickets.forEach(t=>{const c=t.typeOfHelp||'Other';cats[c]=(cats[c]||0)+1});
   const topCat=Object.entries(cats).sort((a,b)=>b[1]-a[1])[0]||['—',0];
   const tData=[4,6,5,8,7,11,9,6,12,10,14,9,11,12];
   const dData=[12,10,13,14,15,18,16,14,19,17,22,18,21,24];
+
+  // Session grouping
+  const sessions=useMemo(()=>{const m={};convs.forEach(c=>{const k=(c.customer_email||'?')+'|'+(c.created_at||'').slice(0,10);if(!m[k])m[k]={email:c.customer_email||'?',name:c.customer_name||c.customer_email||'Unknown',msgs:[]};m[k].msgs.push(c)});return m;},[convs]);
+  const sessArr=Object.values(sessions);
+  const sessionCount=sessArr.length;
+
+  // Hour histogram (based on message timestamps)
+  const hourCounts=useMemo(()=>{const h=Array(24).fill(0);convs.forEach(c=>{try{h[new Date(c.created_at).getHours()]++}catch{}});return h;},[convs]);
+  const maxHour=Math.max(...hourCounts,1);
+  const peakHour=hourCounts.indexOf(Math.max(...hourCounts));
+  const fmtHr=h=>{const ap=h>=12?'pm':'am';return`${h%12||12}${ap}`};
+
+  // Top customers by session count
+  const custMap=useMemo(()=>{const m={};sessArr.forEach(s=>{if(!m[s.email])m[s.email]={email:s.email,name:s.name,sessions:0,msgs:0};m[s.email].sessions++;m[s.email].msgs+=s.msgs.length});return m;},[sessArr]);
+  const topCustomers=Object.values(custMap).sort((a,b)=>b.sessions-a.sessions).slice(0,8);
+  const uniqueCustomers=Object.keys(custMap).length;
+  const avgMsgs=sessionCount>0?Math.round(convs.length/sessionCount):0;
+
+  // Day-of-week counts
+  const dayNames=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const dayCounts=useMemo(()=>{const d=Array(7).fill(0);convs.forEach(c=>{try{d[new Date(c.created_at).getDay()]++}catch{}});return d;},[convs]);
+  const maxDay=Math.max(...dayCounts,1);
+
   return(
     <div className="st-page">
-      <PageHead eyebrow="OVERVIEW" title="Analytics" sub="Live snapshot of the support floor. Pulls from ticket store, RUFUS logs, and customer sessions."
+      <PageHead eyebrow="OVERVIEW" title="Analytics" sub="Live snapshot of the support floor — tickets, RUFUS sessions, and customer activity."
         right={<button className="st-btn-ghost st-btn-sm">Last 30 days<I.ChevD width="11" height="11"/></button>}
       />
       <div className="st-stat-grid">
         <StatCard label="OPEN TICKETS" value={String(openCount)} hint="across all staff" icon={<I.Inbox/>}/>
-        <StatCard label="CONVERSATIONS" value={String(convs.length)} hint="RUFUS sessions total" icon={<I.Spark/>}/>
+        <StatCard label="RUFUS SESSIONS" value={String(sessionCount)} hint={`${uniqueCustomers} unique customers`} icon={<I.Spark/>}/>
         <StatCard label="TOP CATEGORY" value={topCat[0]} hint={`${topCat[1]} tickets`} icon={<I.Bolt/>} category/>
-        <StatCard label="RUFUS SESSIONS" value={String(Math.round(convs.length/(tickets.length||1)*100))+'%'} hint="chat before ticket" icon={<I.Logo size={14}/>} accent/>
+        <StatCard label="AVG SESSION" value={String(avgMsgs)} hint="messages per conversation" icon={<I.Clock/>} accent/>
       </div>
-      <div className="st-analytics-grid">
+
+      <div className="st-analytics-grid" style={{marginBottom:12}}>
         <div className="st-analytics-card">
           <div className="st-analytics-head">
             <div><div className="st-analytics-eyebrow">VOLUME · LAST 14 DAYS</div><h3 className="st-analytics-title">Tickets opened vs. RUFUS deflected</h3></div>
@@ -1072,7 +1226,7 @@ function Analytics(){
           <AnalyticsChart tickets={tData} deflected={dData}/>
         </div>
         <div className="st-analytics-card">
-          <div className="st-analytics-head"><div className="st-analytics-eyebrow">CATEGORY MIX</div></div>
+          <div className="st-analytics-head"><div className="st-analytics-eyebrow">TICKET CATEGORY MIX</div></div>
           <div className="st-cat-list">
             {(Object.entries(cats).length>0?Object.entries(cats).sort((a,b)=>b[1]-a[1]).slice(0,6):[['Motion',34],['Display',22],['Software',18],['Audio',12],['Hardware',9],['Other',5]]).map(([l,n],i)=>(
               <div key={l} className="st-cat-row">
@@ -1083,6 +1237,73 @@ function Analytics(){
             ))}
           </div>
         </div>
+      </div>
+
+      <div style={{fontSize:10,fontWeight:500,color:'rgba(255,252,246,0.35)',letterSpacing:'0.10em',textTransform:'uppercase',marginBottom:10}}>RUFUS INTELLIGENCE</div>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:12}}>
+        <div className="st-analytics-card" style={{padding:'12px 16px'}}>
+          <div className="st-analytics-eyebrow" style={{marginBottom:4}}>TOTAL MESSAGES</div>
+          <div style={{fontSize:36,fontFamily:'var(--font-display)',color:'#fff',lineHeight:1}}>{convs.length}</div>
+          <div style={{fontSize:11,color:'rgba(255,252,246,0.40)',marginTop:5}}>exchanged with RUFUS</div>
+        </div>
+        <div className="st-analytics-card" style={{padding:'12px 16px'}}>
+          <div className="st-analytics-eyebrow" style={{marginBottom:4}}>UNIQUE CUSTOMERS</div>
+          <div style={{fontSize:36,fontFamily:'var(--font-display)',color:'#fff',lineHeight:1}}>{uniqueCustomers}</div>
+          <div style={{fontSize:11,color:'rgba(255,252,246,0.40)',marginTop:5}}>have chatted with RUFUS</div>
+        </div>
+        <div className="st-analytics-card" style={{padding:'12px 16px'}}>
+          <div className="st-analytics-eyebrow" style={{marginBottom:4}}>DEFLECTION RATE</div>
+          <div style={{fontSize:36,fontFamily:'var(--font-display)',color:'#fff',lineHeight:1}}>{Math.round(sessionCount/(tickets.length||1)*100)}%</div>
+          <div style={{fontSize:11,color:'rgba(255,252,246,0.40)',marginTop:5}}>customers used RUFUS before a ticket</div>
+        </div>
+      </div>
+
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
+        <div className="st-analytics-card">
+          <div className="st-analytics-head" style={{marginBottom:8}}>
+            <div><div className="st-analytics-eyebrow">ACTIVITY BY HOUR</div><h3 className="st-analytics-title">{convs.length>0?`Peak time: ${fmtHr(peakHour)}`:'No data yet'}</h3></div>
+          </div>
+          <div className="st-hour-chart">
+            {hourCounts.map((v,h)=>(
+              <div key={h} className="st-hour-bar" style={{height:`${Math.max((v/maxHour)*100,4)}%`}} title={`${fmtHr(h)}: ${v} messages`}/>
+            ))}
+          </div>
+          <div style={{display:'flex',justifyContent:'space-between',fontSize:10,color:'rgba(255,252,246,0.28)',marginTop:5}}>
+            <span>12am</span><span>6am</span><span>12pm</span><span>6pm</span><span>11pm</span>
+          </div>
+        </div>
+        <div className="st-analytics-card">
+          <div className="st-analytics-head" style={{marginBottom:8}}>
+            <div><div className="st-analytics-eyebrow">ACTIVITY BY DAY</div><h3 className="st-analytics-title">{convs.length>0?`Busiest: ${dayNames[dayCounts.indexOf(Math.max(...dayCounts))]}`:'No data yet'}</h3></div>
+          </div>
+          <div style={{display:'flex',alignItems:'flex-end',gap:6,height:56,padding:'0 2px'}}>
+            {dayCounts.map((v,d)=>(
+              <div key={d} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:4,height:'100%',justifyContent:'flex-end'}}>
+                <div style={{width:'100%',background:'rgba(96,165,250,0.4)',borderRadius:'2px 2px 0 0',height:`${Math.max((v/maxDay)*100,4)}%`,transition:'height .3s'}} title={`${dayNames[d]}: ${v}`}/>
+              </div>
+            ))}
+          </div>
+          <div style={{display:'flex',justifyContent:'space-around',fontSize:10,color:'rgba(255,252,246,0.28)',marginTop:5}}>
+            {dayNames.map(d=><span key={d}>{d}</span>)}
+          </div>
+        </div>
+      </div>
+
+      <div className="st-analytics-card">
+        <div className="st-analytics-head" style={{marginBottom:10}}>
+          <div><div className="st-analytics-eyebrow">TOP RUFUS USERS</div><h3 className="st-analytics-title">Customers with the most conversations</h3></div>
+        </div>
+        {topCustomers.length===0&&<div className="st-empty">No conversation data yet.</div>}
+        {topCustomers.map((c,i)=>(
+          <div key={c.email} className="st-rufus-row">
+            <span className="st-rufus-rank">{i+1}</span>
+            <Av initials={initials(c.name)} size={22}/>
+            <span style={{flex:1,fontSize:13,fontWeight:500,color:'#fff',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{c.name}</span>
+            <span style={{fontSize:11,color:'rgba(255,252,246,0.45)',minWidth:80,textAlign:'right'}}>{c.email}</span>
+            <Pill tone="blue">{c.sessions} session{c.sessions!==1?'s':''}</Pill>
+            <span style={{fontSize:11,color:'rgba(255,252,246,0.40)',fontFamily:'var(--font-mono)',minWidth:50,textAlign:'right'}}>{c.msgs} msgs</span>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -1222,6 +1443,7 @@ function App(){
   const[tab,setTab]=useState('queue');
   const[collapsed,setCollapsed]=useState(()=>{const s=localStorage.getItem('p1_staff_sidebar_collapsed');if(s!==null)return s==='true';return window.innerWidth<768});
   const[openCount,setOpenCount]=useState(0);
+  const[showSearch,setShowSearch]=useState(false);
 
   useEffect(()=>{localStorage.setItem('p1_staff_sidebar_collapsed',String(collapsed))},[collapsed]);
 
@@ -1237,6 +1459,7 @@ function App(){
     if(!me)return;
     const h=e=>{
       if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.tagName==='SELECT')return;
+      if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();setShowSearch(true);return;}
       const map={q:'queue',c:'customers',v:'convs',n:'news',b:'kb',t:'snippets',a:'analytics',g:'rig',s:'staff'};
       if(map[e.key.toLowerCase()]){if(map[e.key.toLowerCase()]==='s'&&me.role!=='admin')return;setTab(map[e.key.toLowerCase()]);}
     };
@@ -1249,7 +1472,8 @@ function App(){
     <div className="st-app">
       <button className="st-mob-ham" onClick={()=>setCollapsed(false)} aria-label="Open menu"><span/><span/><span/></button>
       <div className={`st-mob-backdrop${!collapsed?' show':''}`} onClick={()=>setCollapsed(true)}/>
-      <Sidebar tab={tab} setTab={setTab} me={me} collapsed={collapsed} setCollapsed={setCollapsed} openCount={openCount}/>
+      {showSearch&&<SearchModal onClose={()=>setShowSearch(false)} setTab={t=>{setTab(t);setShowSearch(false)}}/>}
+      <Sidebar tab={tab} setTab={setTab} me={me} collapsed={collapsed} setCollapsed={setCollapsed} openCount={openCount} onOpenSearch={()=>setShowSearch(true)}/>
       <main className="st-main">
         {tab==='queue'     &&<TicketQueue me={me}/>}
         {tab==='customers' &&<CustomerLookup me={me}/>}
