@@ -353,7 +353,7 @@ const Spin=()=><span className="lin-spinner"/>;
 const Kbd=({k})=><kbd className="lin-kbd">{k}</kbd>;
 
 function fmtMsg(t){return t.replace(/\*\*(.*?)\*\*/g,'<b>$1</b>').replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\n/g,'<br/>')}
-function fmtDate(iso){try{const d=new Date(iso),now=new Date(),diff=(now-d)/1e3;if(diff<3600)return Math.floor(diff/60)+'m ago';if(diff<86400)return Math.floor(diff/3600)+'h ago';if(diff<2592000)return Math.floor(diff/86400)+'d ago';return d.toLocaleDateString('en-US',{month:'short',day:'numeric'})}catch{return ''}}
+function fmtDate(iso){try{const d=new Date(iso),now=new Date(),diff=(now-d)/1e3;if(diff<0)return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});if(diff<3600)return Math.floor(diff/60)+'m ago';if(diff<86400)return Math.floor(diff/3600)+'h ago';if(diff<2592000)return Math.floor(diff/86400)+'d ago';return d.toLocaleDateString('en-US',{month:'short',day:'numeric'})}catch{return ''}}
 function statusTone(s=''){if(/resolv|closed|done/i.test(s))return 'green';if(/progress|working/i.test(s))return 'amber';if(/open|new/i.test(s))return 'blue';return 'ghost'}
 
 // ── LOGIN ────────────────────────────────────────────────────────────────
@@ -435,7 +435,7 @@ function SearchModal({onClose,setTab}){
   );
 }
 
-function Sidebar({tab,setTab,user,collapsed,setCollapsed,onOpenSearch}){
+function Sidebar({tab,setTab,user,collapsed,setCollapsed,onOpenSearch,onLogout}){
   const nav=[
     {k:'home',   l:'Home',            i:Ico.Home,   kbd:'H'},
     {k:'kb',     l:'Knowledge Base',  i:Ico.Book,   kbd:'B'},
@@ -495,7 +495,7 @@ function Sidebar({tab,setTab,user,collapsed,setCollapsed,onOpenSearch}){
             </div>
           </>
         )}
-        <div className="lin-side-foot" style={collapsed?{justifyContent:'center',padding:'10px 4px 6px'}:{}}>
+        <div className="lin-side-foot" style={collapsed?{justifyContent:'center',padding:'10px 4px 6px',flexDirection:'column',gap:6}:{}}>
           <Av initials={initials_} size={26}/>
           {!collapsed&&(
             <div className="lin-side-user">
@@ -503,6 +503,10 @@ function Sidebar({tab,setTab,user,collapsed,setCollapsed,onOpenSearch}){
               <div className="lin-side-email">{user.email}</div>
             </div>
           )}
+          <button onClick={onLogout} title="Log out" style={{display:'inline-flex',alignItems:'center',justifyContent:'center',padding:'4px 8px',background:'transparent',border:'1px solid rgba(255,255,255,0.07)',borderRadius:6,color:'rgba(255,252,246,0.40)',fontSize:11,cursor:'pointer',gap:5,flexShrink:0,transition:'all .15s ease',marginLeft:collapsed?0:'auto',whiteSpace:'nowrap'}} onMouseOver={e=>{e.currentTarget.style.color='#f8505f';e.currentTarget.style.borderColor='rgba(204,17,34,0.30)'}} onMouseOut={e=>{e.currentTarget.style.color='rgba(255,252,246,0.40)';e.currentTarget.style.borderColor='rgba(255,255,255,0.07)'}}>
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 8h7M10 5l3 3-3 3"/><path d="M10 3H4a1 1 0 00-1 1v8a1 1 0 001 1h6"/></svg>
+            {!collapsed&&'Log out'}
+          </button>
         </div>
       </aside>
     </>
@@ -936,7 +940,7 @@ function App(){
   return(
     <div className="lin-app">
       {showSearch&&<SearchModal onClose={()=>setShowSearch(false)} setTab={t=>{setTab(t);setShowSearch(false)}}/>}
-      <Sidebar tab={tab} setTab={setTab} user={user} collapsed={collapsed} setCollapsed={setCollapsed} onOpenSearch={()=>setShowSearch(true)}/>
+      <Sidebar tab={tab} setTab={setTab} user={user} collapsed={collapsed} setCollapsed={setCollapsed} onOpenSearch={()=>setShowSearch(true)} onLogout={()=>setUser(null)}/>
       <div className="lin-main-wrap">
         {tab==='home'   &&<Home user={user} setTab={setTab}/>}
         {tab==='kb'     &&<div style={{flex:1,overflowY:'auto',background:'#0a0a0c',height:'100%'}}><KBPage/></div>}

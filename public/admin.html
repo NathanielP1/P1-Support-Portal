@@ -382,7 +382,7 @@ const Spin=()=><span className="st-spinner"/>;
 const STATUS_LABEL={open:'Open',progress:'Working on it',resolved:'Resolved'};
 const STATUS_TONE={open:'red',progress:'amber',resolved:'green'};
 function statusTone(s=''){if(/resolv|closed|done/i.test(s))return'green';if(/progress|working/i.test(s))return'amber';if(/open|new/i.test(s))return'blue';return'ghost'}
-function fmtDate(iso){try{const d=new Date(iso),now=new Date(),diff=(now-d)/1e3;if(diff<3600)return Math.floor(diff/60)+'m ago';if(diff<86400)return Math.floor(diff/3600)+'h ago';return d.toLocaleDateString('en-US',{month:'short',day:'numeric'})}catch{return''}}
+function fmtDate(iso){try{const d=new Date(iso),now=new Date(),diff=(now-d)/1e3;if(diff<0)return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});if(diff<3600)return Math.floor(diff/60)+'m ago';if(diff<86400)return Math.floor(diff/3600)+'h ago';if(diff<2592000)return Math.floor(diff/86400)+'d ago';return d.toLocaleDateString('en-US',{month:'short',day:'numeric'})}catch{return''}}
 function initials(name=''){return(name.split(' ').map(w=>w[0]).join('').slice(0,2)||'??').toUpperCase()}
 
 // ── LOGIN ────────────────────────────────────────────────────────────────
@@ -424,7 +424,7 @@ function Login({onSignIn}){
 }
 
 // ── SIDEBAR ──────────────────────────────────────────────────────────────
-function Sidebar({tab,setTab,me,collapsed,setCollapsed,openCount,onOpenSearch}){
+function Sidebar({tab,setTab,me,collapsed,setCollapsed,openCount,onOpenSearch,onLogout}){
   const nav=[
     {k:'queue',     l:'Ticket Queue',     i:I.Inbox, kbd:'Q', badge:openCount},
     {k:'customers', l:'Customer Lookup',  i:I.User,  kbd:'C'},
@@ -471,11 +471,15 @@ function Sidebar({tab,setTab,me,collapsed,setCollapsed,openCount,onOpenSearch}){
           </div>
         </>
       )}
-      <div className="st-side-foot" style={collapsed?{justifyContent:'center',padding:'10px 4px 6px'}:{}}>
+      <div className="st-side-foot" style={collapsed?{justifyContent:'center',padding:'10px 4px 6px',flexDirection:'column',gap:6}:{}}>
         <Av initials={initials(me.name)} size={26}/>
         {!collapsed&&(
           <div className="st-side-user"><div className="st-side-name">{me.name}</div><div className="st-side-email">{me.role==='admin'?'Admin':'Support specialist'}</div></div>
         )}
+        <button onClick={onLogout} title="Log out" style={{display:'inline-flex',alignItems:'center',justifyContent:'center',padding:'4px 8px',background:'transparent',border:'1px solid rgba(255,255,255,0.07)',borderRadius:6,color:'rgba(255,252,246,0.40)',fontSize:11,cursor:'pointer',gap:5,flexShrink:0,transition:'all .15s ease',marginLeft:collapsed?0:'auto',whiteSpace:'nowrap'}} onMouseOver={e=>{e.currentTarget.style.color='#f8505f';e.currentTarget.style.borderColor='rgba(204,17,34,0.30)'}} onMouseOut={e=>{e.currentTarget.style.color='rgba(255,252,246,0.40)';e.currentTarget.style.borderColor='rgba(255,255,255,0.07)'}}>
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 8h7M10 5l3 3-3 3"/><path d="M10 3H4a1 1 0 00-1 1v8a1 1 0 001 1h6"/></svg>
+          {!collapsed&&'Log out'}
+        </button>
       </div>
     </aside>
   );
@@ -496,12 +500,27 @@ function TicketQueue({me}){
   const[loading,setLoading]=useState(true);
   const[filter,setFilter]=useState('all');
   const[openId,setOpenId]=useState(null);
+  const[showNew,setShowNew]=useState(false);
+  const[newForm,setNewForm]=useState({name:'',email:'',issue:'',typeOfHelp:'',rig:''});
+  const[saving,setSaving]=useState(false);
+  const[colW,setColW]=useState([82,160,200,110,110,110,130]);
+  const dragRef=useRef(null);
 
   const load=()=>{
     setLoading(true);
     fetch('/api/tickets').then(r=>r.json()).then(d=>{setTickets(d.tickets||[]);setLoading(false)}).catch(()=>setLoading(false));
   };
   useEffect(load,[]);
+
+  const startDrag=(i,e)=>{
+    e.preventDefault();
+    const startX=e.clientX,startW=colW[i];
+    const onMove=ev=>setColW(w=>{const n=[...w];n[i]=Math.max(60,startW+(ev.clientX-startX));return n});
+    const onUp=()=>{window.removeEventListener('mousemove',onMove);window.removeEventListener('mouseup',onUp)};
+    window.addEventListener('mousemove',onMove);window.addEventListener('mouseup',onUp);
+  };
+  const colTpl=colW.map(w=>w+'px').join(' ');
+  const cols=['ID','Customer','Issue','Category','Submitted','Status','Assigned'];
 
   const counts=useMemo(()=>({
     all:tickets.length,
@@ -518,6 +537,13 @@ function TicketQueue({me}){
     return true;
   });
 
+  const submit=async()=>{
+    if(!newForm.name||!newForm.email)return;
+    setSaving(true);
+    await fetch('/api/tickets',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(newForm)}).catch(()=>{});
+    setSaving(false);setShowNew(false);setNewForm({name:'',email:'',issue:'',typeOfHelp:'',rig:''});load();
+  };
+
   const openTicket=tickets.find(t=>t.id===openId);
 
   return(
@@ -525,7 +551,7 @@ function TicketQueue({me}){
       <div style={{flex:1,overflowY:'auto'}}>
         <div className="st-page">
           <PageHead eyebrow="SUPPORT · QUEUE" title={<>Ticket queue <span className="st-h1-count">{counts.open+counts.progress}</span></>} sub="All open work across the support team. Click any row to open the detail panel."
-            right={<button className="st-btn-primary"><I.Plus width="13" height="13"/>New ticket</button>}
+            right={<button className="st-btn-primary" onClick={()=>setShowNew(true)}><I.Plus width="13" height="13"/>New ticket</button>}
           />
           <div className="st-tabs">
             {[{k:'all',l:'All',n:counts.all},{k:'open',l:'Open',n:counts.open},{k:'progress',l:'In progress',n:counts.progress},{k:'resolved',l:'Resolved',n:counts.resolved},{k:'unassigned',l:'Unassigned',n:counts.unassigned}].map(t=>(
@@ -536,27 +562,55 @@ function TicketQueue({me}){
           </div>
           {loading&&<div className="st-loading"><Spin/> Loading tickets…</div>}
           {!loading&&(
-            <div className="st-table">
-              <div className="st-table-head st-table-head-q"><div>ID</div><div>Customer</div><div>Issue</div><div>Category</div><div>Submitted</div><div>Status</div><div>Assigned</div></div>
-              {filtered.length===0&&<div className="st-empty">No tickets in this view.</div>}
-              {filtered.map(t=>(
-                <button key={t.id} className={`st-table-row st-table-row-q${openId===t.id?' on':''}`} onClick={()=>setOpenId(t.id===openId?null:t.id)}>
-                  <div className="st-row-id mono">{t.ticketNum||t.id}</div>
-                  <div className="st-row-cust"><Av initials={initials(t.name||'?')} size={22}/><span>{t.name||t.email||'Unknown'}</span></div>
-                  <div className="st-row-text">{t.issue||t.name||'—'}</div>
-                  <div><Pill tone="ghost">{t.typeOfHelp||t.rig||'General'}</Pill></div>
-                  <div className="st-row-meta mono">{t.date||''}</div>
-                  <div><Pill tone={statusTone(t.status||'')} dot>{t.status||'Open'}</Pill></div>
-                  <div className="st-row-agent">
-                    {t.assignee?<><Av initials={initials(t.assignee)} size={20} tone="blue"/><span>{t.assignee.split(' ')[0]}</span></>:<span className="st-row-unassigned">— Unassigned</span>}
-                  </div>
-                </button>
-              ))}
+            <div style={{overflowX:'auto'}}>
+              <div className="st-table" style={{minWidth:colW.reduce((a,b)=>a+b,0)+28}}>
+                <div className="st-table-head" style={{display:'grid',gridTemplateColumns:colTpl,gap:0,padding:'9px 14px',background:'rgba(255,255,255,0.02)',borderBottom:'1px solid rgba(255,255,255,0.05)',fontSize:10,fontWeight:500,color:'rgba(255,252,246,0.40)',textTransform:'uppercase',letterSpacing:'0.08em'}}>
+                  {cols.map((c,i)=>(
+                    <div key={c} style={{position:'relative',display:'flex',alignItems:'center',paddingRight:8,overflow:'hidden',whiteSpace:'nowrap'}}>
+                      {c}
+                      {i<cols.length-1&&<div onMouseDown={e=>startDrag(i,e)} style={{position:'absolute',right:0,top:-4,bottom:-4,width:7,cursor:'col-resize',zIndex:2,display:'flex',alignItems:'center',justifyContent:'center'}}><div style={{width:1,height:14,background:'rgba(255,255,255,0.12)'}}/></div>}
+                    </div>
+                  ))}
+                </div>
+                {filtered.length===0&&<div className="st-empty">No tickets in this view.</div>}
+                {filtered.map(t=>(
+                  <button key={t.id} className={`st-table-row${openId===t.id?' on':''}`} style={{display:'grid',gridTemplateColumns:colTpl,gap:0,padding:'10px 14px',alignItems:'center',background:'transparent',border:'none',borderTop:'1px solid rgba(255,255,255,0.04)',width:'100%',textAlign:'left',cursor:'pointer',color:'inherit',transition:'background .12s ease'}} onClick={()=>setOpenId(t.id===openId?null:t.id)}>
+                    <div className="st-row-id mono" style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{t.ticketNum||t.id}</div>
+                    <div className="st-row-cust" style={{overflow:'hidden'}}><Av initials={initials(t.name||'?')} size={22}/><span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{t.name||t.email||'Unknown'}</span></div>
+                    <div className="st-row-text" style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{t.issue||t.name||'—'}</div>
+                    <div><Pill tone="ghost">{t.typeOfHelp||t.rig||'General'}</Pill></div>
+                    <div className="st-row-meta mono">{t.date||''}</div>
+                    <div><Pill tone={statusTone(t.status||'')} dot>{t.status||'Open'}</Pill></div>
+                    <div className="st-row-agent">
+                      {t.assignee?<><Av initials={initials(t.assignee)} size={20} tone="blue"/><span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{t.assignee.split(' ')[0]}</span></>:<span className="st-row-unassigned">— Unassigned</span>}
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
           )}
         </div>
       </div>
       {openTicket&&<TicketDetail ticket={openTicket} onClose={()=>setOpenId(null)}/>}
+      {showNew&&(
+        <div className="st-overlay" onClick={()=>setShowNew(false)}>
+          <div className="st-modal" onClick={e=>e.stopPropagation()}>
+            <div className="st-modal-head"><span className="st-modal-title">New support ticket</span><button className="st-icon-btn" onClick={()=>setShowNew(false)}><I.X width="13" height="13"/></button></div>
+            <div className="st-modal-body">
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+                <div className="st-form-field"><label className="st-form-label">Customer name *</label><input className="st-input" value={newForm.name} onChange={e=>setNewForm(f=>({...f,name:e.target.value}))} placeholder="Jane Smith" autoFocus/></div>
+                <div className="st-form-field"><label className="st-form-label">Customer email *</label><input className="st-input" type="email" value={newForm.email} onChange={e=>setNewForm(f=>({...f,email:e.target.value}))} placeholder="jane@example.com"/></div>
+              </div>
+              <div className="st-form-field"><label className="st-form-label">Issue description *</label><textarea className="st-input st-textarea" rows={3} value={newForm.issue} onChange={e=>setNewForm(f=>({...f,issue:e.target.value}))} placeholder="Describe the issue the customer is experiencing…"/></div>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+                <div className="st-form-field"><label className="st-form-label">Category</label><input className="st-input" value={newForm.typeOfHelp} onChange={e=>setNewForm(f=>({...f,typeOfHelp:e.target.value}))} placeholder="e.g. Motion, Software, Hardware"/></div>
+                <div className="st-form-field"><label className="st-form-label">Simulator model</label><input className="st-input" value={newForm.rig} onChange={e=>setNewForm(f=>({...f,rig:e.target.value}))} placeholder="e.g. P1-X Ultimate"/></div>
+              </div>
+            </div>
+            <div className="st-modal-actions"><button className="st-btn-ghost" onClick={()=>setShowNew(false)}>Cancel</button><button className="st-btn-primary" onClick={submit} disabled={!newForm.name||!newForm.email||!newForm.issue||saving}>{saving?<Spin/>:'Create ticket'}</button></div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -605,6 +659,9 @@ function CustomerLookup({me}){
   const[tickets,setTickets]=useState([]);
   const[showModal,setShowModal]=useState(false);
   const[editData,setEditData]=useState({});
+  const[showAddCust,setShowAddCust]=useState(false);
+  const[addForm,setAddForm]=useState({name:'',email:'',rig:'',city:'',purchase_date:'',motion_platform:'',wheelbase:'',specialist_name:'',specialist_email:''});
+  const[addSaving,setAddSaving]=useState(false);
   const[csvRows,setCsvRows]=useState([]);
   const[showCSV,setShowCSV]=useState(false);
   const[importing,setImporting]=useState(false);
@@ -621,10 +678,19 @@ function CustomerLookup({me}){
   const custTickets=active?tickets.filter(t=>t.email&&active.email&&t.email.toLowerCase()===active.email.toLowerCase()):[];
 
   const save=async()=>{
-    await fetch('/api/customers',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'update',email:active.email,...editData})});
+    await fetch('/api/customers',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'update',email:active.email,data:editData})});
     setCustomers(c=>c.map(x=>x.email===active.email?{...x,...editData}:x));
     setActive(a=>({...a,...editData}));
     setShowModal(false);
+  };
+
+  const addCustomer=async()=>{
+    if(!addForm.name||!addForm.email)return;
+    setAddSaving(true);
+    await fetch('/api/customers',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'create',...addForm})});
+    setAddSaving(false);setShowAddCust(false);
+    setAddForm({name:'',email:'',rig:'',city:'',purchase_date:'',motion_platform:'',wheelbase:'',specialist_name:'',specialist_email:''});
+    fetch('/api/customers').then(r=>r.json()).then(d=>{const c=d.customers||[];setCustomers(c)});
   };
 
   const parseCSV=text=>{
@@ -663,7 +729,7 @@ function CustomerLookup({me}){
   return(
     <div className="st-page">
       <PageHead eyebrow="SUPPORT · LOOKUP" title="Customer lookup" sub="Search by name, email, or rig type."
-        right={<div style={{display:'flex',gap:8}}><button className="st-btn-ghost" onClick={()=>csvRef.current?.click()}><I.Plus width="13" height="13"/>Import CSV</button><input ref={csvRef} type="file" accept=".csv,text/csv" style={{display:'none'}} onChange={handleCSVFile}/><button className="st-btn-primary"><I.Plus width="13" height="13"/>Add customer</button></div>}
+        right={<div style={{display:'flex',gap:8}}><button className="st-btn-ghost" onClick={()=>csvRef.current?.click()}><I.Plus width="13" height="13"/>Import CSV</button><input ref={csvRef} type="file" accept=".csv,text/csv" style={{display:'none'}} onChange={handleCSVFile}/><button className="st-btn-primary" onClick={()=>setShowAddCust(true)}><I.Plus width="13" height="13"/>Add customer</button></div>}
       />
       <div className="st-search-big"><I.Search width="16" height="16"/><input className="st-search-input" placeholder="Search customers, emails…" value={q} onChange={e=>setQ(e.target.value)} autoFocus/></div>
       {loading&&<div className="st-loading"><Spin/> Loading…</div>}
@@ -687,7 +753,7 @@ function CustomerLookup({me}){
                   <div className="st-customer-name">{active.name}</div>
                   <div className="st-customer-meta"><span><I.Mail width="11" height="11"/>{active.email}</span>{active.city&&<span>{active.city}</span>}</div>
                 </div>
-                {me.role==='admin'&&<button className="st-btn-ghost st-btn-sm" onClick={()=>{setEditData({specialist_name:active.specialist_name||'',specialist_email:active.specialist_email||''});setShowModal(true)}}><I.Edit/>Edit</button>}
+                <button className="st-btn-ghost st-btn-sm" onClick={()=>{setEditData({name:active.name||'',email:active.email||'',city:active.city||'',rig:active.rig||'',purchase_date:active.purchase_date||'',motion_platform:active.motion_platform||'',wheelbase:active.wheelbase||'',specialist_name:active.specialist_name||'',specialist_email:active.specialist_email||''});setShowModal(true)}}><I.Edit/>Edit</button>
               </div>
               <div className="st-customer-stats">
                 {active.rig&&<div className="st-cstat"><div className="st-cstat-l">Simulator</div><div className="st-cstat-v">{active.rig}</div></div>}
@@ -719,13 +785,43 @@ function CustomerLookup({me}){
       )}
       {showModal&&(
         <div className="st-overlay" onClick={()=>setShowModal(false)}>
-          <div className="st-modal" onClick={e=>e.stopPropagation()}>
-            <div className="st-modal-head"><span className="st-modal-title">Edit — {active?.name}</span><button className="st-icon-btn" onClick={()=>setShowModal(false)}><I.X width="13" height="13"/></button></div>
+          <div className="st-modal" style={{maxWidth:560}} onClick={e=>e.stopPropagation()}>
+            <div className="st-modal-head"><span className="st-modal-title">Edit customer — {active?.name}</span><button className="st-icon-btn" onClick={()=>setShowModal(false)}><I.X width="13" height="13"/></button></div>
             <div className="st-modal-body">
-              <div className="st-form-field"><label className="st-form-label">Specialist name</label><input className="st-input" value={editData.specialist_name||''} onChange={e=>setEditData(d=>({...d,specialist_name:e.target.value}))} placeholder="Nathaniel Thorpe"/></div>
-              <div className="st-form-field"><label className="st-form-label">Specialist email</label><input className="st-input" type="email" value={editData.specialist_email||''} onChange={e=>setEditData(d=>({...d,specialist_email:e.target.value}))} placeholder="nathaniel@podium1racing.com"/></div>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+                <div className="st-form-field"><label className="st-form-label">Name</label><input className="st-input" value={editData.name||''} onChange={e=>setEditData(d=>({...d,name:e.target.value}))} placeholder="Jane Smith"/></div>
+                <div className="st-form-field"><label className="st-form-label">Email</label><input className="st-input" type="email" value={editData.email||''} onChange={e=>setEditData(d=>({...d,email:e.target.value}))} placeholder="jane@example.com"/></div>
+                <div className="st-form-field"><label className="st-form-label">City</label><input className="st-input" value={editData.city||''} onChange={e=>setEditData(d=>({...d,city:e.target.value}))} placeholder="Nashville, TN"/></div>
+                <div className="st-form-field"><label className="st-form-label">Purchase date</label><input className="st-input" value={editData.purchase_date||''} onChange={e=>setEditData(d=>({...d,purchase_date:e.target.value}))} placeholder="2024-06-15"/></div>
+                <div className="st-form-field"><label className="st-form-label">Simulator model</label><input className="st-input" value={editData.rig||''} onChange={e=>setEditData(d=>({...d,rig:e.target.value}))} placeholder="P1-X Ultimate"/></div>
+                <div className="st-form-field"><label className="st-form-label">Wheelbase</label><input className="st-input" value={editData.wheelbase||''} onChange={e=>setEditData(d=>({...d,wheelbase:e.target.value}))} placeholder="Fanatec DD2"/></div>
+                <div className="st-form-field" style={{gridColumn:'1/-1'}}><label className="st-form-label">Motion platform</label><input className="st-input" value={editData.motion_platform||''} onChange={e=>setEditData(d=>({...d,motion_platform:e.target.value}))} placeholder="Simtag 6DOF"/></div>
+                <div className="st-form-field"><label className="st-form-label">Specialist name</label><input className="st-input" value={editData.specialist_name||''} onChange={e=>setEditData(d=>({...d,specialist_name:e.target.value}))} placeholder="Nathaniel Thorpe"/></div>
+                <div className="st-form-field"><label className="st-form-label">Specialist email</label><input className="st-input" type="email" value={editData.specialist_email||''} onChange={e=>setEditData(d=>({...d,specialist_email:e.target.value}))} placeholder="nathaniel@podium1racing.com"/></div>
+              </div>
             </div>
             <div className="st-modal-actions"><button className="st-btn-ghost" onClick={()=>setShowModal(false)}>Cancel</button><button className="st-btn-primary" onClick={save}>Save changes</button></div>
+          </div>
+        </div>
+      )}
+      {showAddCust&&(
+        <div className="st-overlay" onClick={()=>setShowAddCust(false)}>
+          <div className="st-modal" style={{maxWidth:560}} onClick={e=>e.stopPropagation()}>
+            <div className="st-modal-head"><span className="st-modal-title">Add new customer</span><button className="st-icon-btn" onClick={()=>setShowAddCust(false)}><I.X width="13" height="13"/></button></div>
+            <div className="st-modal-body">
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+                <div className="st-form-field"><label className="st-form-label">Name *</label><input className="st-input" value={addForm.name} onChange={e=>setAddForm(f=>({...f,name:e.target.value}))} placeholder="Jane Smith" autoFocus/></div>
+                <div className="st-form-field"><label className="st-form-label">Email *</label><input className="st-input" type="email" value={addForm.email} onChange={e=>setAddForm(f=>({...f,email:e.target.value}))} placeholder="jane@example.com"/></div>
+                <div className="st-form-field"><label className="st-form-label">City</label><input className="st-input" value={addForm.city} onChange={e=>setAddForm(f=>({...f,city:e.target.value}))} placeholder="Nashville, TN"/></div>
+                <div className="st-form-field"><label className="st-form-label">Purchase date</label><input className="st-input" value={addForm.purchase_date} onChange={e=>setAddForm(f=>({...f,purchase_date:e.target.value}))} placeholder="2024-06-15"/></div>
+                <div className="st-form-field"><label className="st-form-label">Simulator model</label><input className="st-input" value={addForm.rig} onChange={e=>setAddForm(f=>({...f,rig:e.target.value}))} placeholder="P1-X Ultimate"/></div>
+                <div className="st-form-field"><label className="st-form-label">Wheelbase</label><input className="st-input" value={addForm.wheelbase} onChange={e=>setAddForm(f=>({...f,wheelbase:e.target.value}))} placeholder="Fanatec DD2"/></div>
+                <div className="st-form-field" style={{gridColumn:'1/-1'}}><label className="st-form-label">Motion platform</label><input className="st-input" value={addForm.motion_platform} onChange={e=>setAddForm(f=>({...f,motion_platform:e.target.value}))} placeholder="Simtag 6DOF"/></div>
+                <div className="st-form-field"><label className="st-form-label">Specialist name</label><input className="st-input" value={addForm.specialist_name} onChange={e=>setAddForm(f=>({...f,specialist_name:e.target.value}))} placeholder="Nathaniel Thorpe"/></div>
+                <div className="st-form-field"><label className="st-form-label">Specialist email</label><input className="st-input" type="email" value={addForm.specialist_email} onChange={e=>setAddForm(f=>({...f,specialist_email:e.target.value}))} placeholder="nathaniel@podium1racing.com"/></div>
+              </div>
+            </div>
+            <div className="st-modal-actions"><button className="st-btn-ghost" onClick={()=>setShowAddCust(false)}>Cancel</button><button className="st-btn-primary" onClick={addCustomer} disabled={!addForm.name||!addForm.email||addSaving}>{addSaving?<Spin/>:'Add customer'}</button></div>
           </div>
         </div>
       )}
@@ -997,6 +1093,9 @@ function KBManager(){
   const[showAddVideo,setShowAddVideo]=useState(false);
   const[videoForm,setVideoForm]=useState({title:'',url:'',notes:'',category:''});
   const[savingVideo,setSavingVideo]=useState(false);
+  const[showAddArt,setShowAddArt]=useState(false);
+  const[artForm,setArtForm]=useState({title:'',url:'',category:'',notes:''});
+  const[savingArt,setSavingArt]=useState(false);
 
   const loadVideos=()=>fetch('/api/kb-videos').then(r=>r.json()).then(d=>setVideos(d.videos||[])).catch(()=>{});
   useEffect(()=>{
@@ -1012,12 +1111,26 @@ function KBManager(){
     await fetch('/api/kb-videos',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(videoForm)});
     setSavingVideo(false);setShowAddVideo(false);setVideoForm({title:'',url:'',notes:'',category:''});loadVideos();
   };
+
+  const addArticle=async()=>{
+    if(!artForm.title||!artForm.url)return;
+    setSavingArt(true);
+    await fetch('/api/kb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(artForm)});
+    setSavingArt(false);setShowAddArt(false);setArtForm({title:'',url:'',category:'',notes:''});
+    fetch('/api/kb').then(r=>r.json()).then(d=>{setFiles(d.files||[]);setLoading(false)}).catch(()=>setLoading(false));
+  };
+
+  const delArticle=async id=>{
+    if(!confirm('Delete this article?'))return;
+    await fetch('/api/kb',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});
+    fetch('/api/kb').then(r=>r.json()).then(d=>{setFiles(d.files||[]);}).catch(()=>{});
+  };
   const delVideo=async id=>{if(!confirm('Delete this video?'))return;await fetch('/api/kb-videos',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});loadVideos()};
 
   return(
     <div className="st-page">
       <PageHead eyebrow="CONTENT · KNOWLEDGE BASE" title="KB manager" sub={`${files.length} articles · ${videos.length} videos`}
-        right={<div style={{display:'flex',gap:8,alignItems:'center'}}><div className="st-kb-view-wrap"><button className={`st-kb-vbtn${view==='list'?' on':''}`} onClick={()=>setView('list')} title="List view"><I.List width="13" height="13"/></button><button className={`st-kb-vbtn${view==='grid'?' on':''}`} onClick={()=>setView('grid')} title="Grid view"><I.Grid width="13" height="13"/></button></div><button className="st-btn-ghost" onClick={()=>setShowAddVideo(true)}><I.Video width="13" height="13"/>Add video</button><button className="st-btn-primary"><I.Plus width="13" height="13"/>New article</button></div>}
+        right={<div style={{display:'flex',gap:8,alignItems:'center'}}><div className="st-kb-view-wrap"><button className={`st-kb-vbtn${view==='list'?' on':''}`} onClick={()=>setView('list')} title="List view"><I.List width="13" height="13"/></button><button className={`st-kb-vbtn${view==='grid'?' on':''}`} onClick={()=>setView('grid')} title="Grid view"><I.Grid width="13" height="13"/></button></div><button className="st-btn-ghost" onClick={()=>setShowAddVideo(true)}><I.Video width="13" height="13"/>Add video</button><button className="st-btn-primary" onClick={()=>setShowAddArt(true)}><I.Plus width="13" height="13"/>New article</button></div>}
       />
       {loading&&<div className="st-loading"><Spin/> Loading…</div>}
       {!loading&&view==='grid'&&(
@@ -1046,6 +1159,7 @@ function KBManager(){
               <div><Pill tone="green" dot>Published</Pill></div>
               <div className="st-row-actions">
                 {f.previewUrl&&<a href={f.previewUrl} target="_blank" rel="noopener noreferrer" className="st-btn-ghost st-btn-sm" style={{textDecoration:'none'}}>Preview</a>}
+                {f.source==='manual'&&<button className="st-btn-danger st-btn-sm" onClick={()=>delArticle(f.id)}><I.Trash width="11" height="11"/></button>}
               </div>
             </div>
           ))}
@@ -1066,6 +1180,20 @@ function KBManager(){
             </div>
           )})}
         </>
+      )}
+      {showAddArt&&(
+        <div className="st-overlay" onClick={()=>setShowAddArt(false)}>
+          <div className="st-modal" onClick={e=>e.stopPropagation()}>
+            <div className="st-modal-head"><span className="st-modal-title">Add KB article</span><button className="st-icon-btn" onClick={()=>setShowAddArt(false)}><I.X width="13" height="13"/></button></div>
+            <div className="st-modal-body">
+              <div className="st-form-field"><label className="st-form-label">Title *</label><input className="st-input" value={artForm.title} onChange={e=>setArtForm(f=>({...f,title:e.target.value}))} placeholder="e.g. P1-X Setup Guide" autoFocus/></div>
+              <div className="st-form-field"><label className="st-form-label">URL * (Google Drive link or web URL)</label><input className="st-input" type="url" value={artForm.url} onChange={e=>setArtForm(f=>({...f,url:e.target.value}))} placeholder="https://drive.google.com/file/d/…/view  or  https://…"/></div>
+              <div className="st-form-field"><label className="st-form-label">Category</label><input className="st-input" value={artForm.category} onChange={e=>setArtForm(f=>({...f,category:e.target.value}))} placeholder="e.g. Hardware, Software, Setup"/></div>
+              <div className="st-form-field"><label className="st-form-label">Notes</label><textarea className="st-input st-textarea" rows={2} value={artForm.notes} onChange={e=>setArtForm(f=>({...f,notes:e.target.value}))} placeholder="Optional short description…"/></div>
+            </div>
+            <div className="st-modal-actions"><button className="st-btn-ghost" onClick={()=>setShowAddArt(false)}>Cancel</button><button className="st-btn-primary" onClick={addArticle} disabled={!artForm.title||!artForm.url||savingArt}>{savingArt?<Spin/>:'Add article'}</button></div>
+          </div>
+        </div>
       )}
       {showAddVideo&&(
         <div className="st-overlay" onClick={()=>setShowAddVideo(false)}>
@@ -1473,7 +1601,7 @@ function App(){
       <button className="st-mob-ham" onClick={()=>setCollapsed(false)} aria-label="Open menu"><span/><span/><span/></button>
       <div className={`st-mob-backdrop${!collapsed?' show':''}`} onClick={()=>setCollapsed(true)}/>
       {showSearch&&<SearchModal onClose={()=>setShowSearch(false)} setTab={t=>{setTab(t);setShowSearch(false)}}/>}
-      <Sidebar tab={tab} setTab={setTab} me={me} collapsed={collapsed} setCollapsed={setCollapsed} openCount={openCount} onOpenSearch={()=>setShowSearch(true)}/>
+      <Sidebar tab={tab} setTab={setTab} me={me} collapsed={collapsed} setCollapsed={setCollapsed} openCount={openCount} onOpenSearch={()=>setShowSearch(true)} onLogout={()=>setMe(null)}/>
       <main className="st-main">
         {tab==='queue'     &&<TicketQueue me={me}/>}
         {tab==='customers' &&<CustomerLookup me={me}/>}
