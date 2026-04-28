@@ -73,6 +73,8 @@ export default async function handler(req, res) {
         addOns: customer.add_ons,
         purchaseDate: customer.purchase_date,
         email: customer.email,
+        specialistName: customer.specialist_name || null,
+        specialistEmail: customer.specialist_email || null,
       }
     });
 
