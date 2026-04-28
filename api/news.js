@@ -76,7 +76,12 @@ export default async function handler(req, res) {
       const articles = feedResults.flatMap(r => r.status === 'fulfilled' ? r.value : []);
       articles.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-      return res.status(200).json({ pinned: Array.isArray(pins) ? pins : [], articles });
+      // Filter to last 180 days; fall back to unfiltered if too few pass
+      const cutoff = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000);
+      const recent = articles.filter(a => { try { return new Date(a.date) >= cutoff; } catch { return true; } });
+      const finalArticles = recent.length >= 5 ? recent : articles;
+
+      return res.status(200).json({ pinned: Array.isArray(pins) ? pins : [], articles: finalArticles });
 
     } else if (req.method === 'POST') {
       const { title, source, url, summary, pinned_by } = req.body;

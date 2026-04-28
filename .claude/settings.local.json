@@ -18,7 +18,12 @@
       "Bash(cp /c/Users/Owner/Downloads/design-customer/_export/customer-portal/logomark.png /c/Users/Owner/Documents/Claude/p1-support-portal/public/)",
       "Bash(cp /c/Users/Owner/Downloads/design-customer/_export/customer-portal/wordmark.png /c/Users/Owner/Documents/Claude/p1-support-portal/public/)",
       "Bash(git add *)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(git stash *)",
+      "Bash(vercel --version)",
+      "Bash(npx --yes vercel --version)",
+      "mcp__Claude_Preview__preview_start"
     ]
   }
 }

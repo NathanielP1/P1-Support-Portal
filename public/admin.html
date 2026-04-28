@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <title>Podium 1 Racing — Staff Dashboard</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Mono:wght@400;500&display=swap');
@@ -267,6 +267,43 @@ button,input,textarea,select{font-family:inherit;color:inherit}
 .st-conv-bubble-a{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06)}
 .st-conv-bubble-u{background:rgba(204,17,34,0.08);border:1px solid rgba(204,17,34,0.15)}
 @media(max-width:1280px){.st-stat-grid{grid-template-columns:repeat(2,1fr)}.st-analytics-grid{grid-template-columns:1fr}}
+/* KB VIEW TOGGLE */
+.st-kb-view-wrap{display:flex;gap:2px;padding:2px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:7px}
+.st-kb-vbtn{display:inline-flex;align-items:center;justify-content:center;width:28px;height:26px;background:transparent;border:none;color:rgba(255,252,246,0.40);border-radius:5px;cursor:pointer;transition:all .12s ease}
+.st-kb-vbtn:hover{color:rgba(255,252,246,0.80)}
+.st-kb-vbtn.on{background:rgba(255,255,255,0.06);color:#fff}
+.st-kb-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px}
+.st-kb-card{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:10px;overflow:hidden;cursor:pointer;transition:all .15s ease}
+.st-kb-card:hover{background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.10)}
+.st-kb-thumb{height:130px;background:#141414;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.st-kb-thumb img{width:100%;height:100%;object-fit:cover}
+.st-kb-card-body{padding:10px 12px}
+.st-kb-card-title{font-size:12px;font-weight:600;color:#fff;line-height:1.4;margin-bottom:5px}
+.st-kb-card-cat{font-size:11px;color:rgba(255,252,246,0.50)}
+/* VIDEO PLAYER */
+.st-video-player{position:relative;padding-top:56.25%;background:#0a0a0c;border-radius:8px;overflow:hidden;margin-bottom:8px}
+.st-video-player iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
+.st-video-card{background:rgba(255,255,255,0.015);border:1px solid rgba(255,255,255,0.06);border-radius:10px;overflow:hidden;margin-bottom:12px}
+.st-video-card-body{padding:12px 14px}
+.st-video-title{font-size:13px;font-weight:600;color:#fff;margin-bottom:4px}
+.st-video-notes{font-size:12px;color:rgba(255,252,246,0.62);line-height:1.5;margin-bottom:8px}
+/* MOBILE OVERLAY */
+.st-mob-ham{display:none;position:fixed;z-index:400;top:calc(10px + env(safe-area-inset-top));left:12px;width:38px;height:38px;background:#0f0f12;border:1px solid rgba(255,255,255,0.10);border-radius:9px;align-items:center;justify-content:center;flex-direction:column;gap:3px;cursor:pointer;padding:8px}
+.st-mob-ham span{display:block;width:16px;height:2px;background:rgba(255,252,246,0.86);border-radius:1px}
+.st-mob-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:298;opacity:0;pointer-events:none;transition:opacity 200ms ease}
+.st-mob-backdrop.show{opacity:1;pointer-events:auto}
+@media(max-width:768px){
+  .st-app{height:100svh;height:-webkit-fill-available}
+  .st-mob-ham{display:flex}
+  .st-mob-backdrop{display:block}
+  .st-side{position:fixed!important;left:0;top:0;bottom:0;z-index:300;width:min(300px,85vw)!important;transform:translateX(-100%);transition:transform 200ms ease;padding-top:env(safe-area-inset-top);padding-bottom:calc(8px + env(safe-area-inset-bottom))}
+  .st-side.mob-open{transform:translateX(0)}
+  .st-page{padding:calc(54px + env(safe-area-inset-top)) 16px calc(40px + env(safe-area-inset-bottom))!important}
+  .st-kb-grid{grid-template-columns:repeat(2,1fr)}
+  .st-lookup-grid{grid-template-columns:1fr}
+  .st-stat-grid{grid-template-columns:repeat(2,1fr)}
+  .st-rig-grid{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
@@ -306,6 +343,9 @@ const I={
   Mail:   p=><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" {...p}><rect x="2" y="3" width="12" height="10" rx="1"/><polyline points="2,4 8,9 14,4"/></svg>,
   Bolt:   p=><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" {...p}><polygon points="9,1 3,9 8,9 7,15 13,7 8,7"/></svg>,
   Clock:  p=><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" {...p}><circle cx="8" cy="8" r="6"/><polyline points="8,4 8,8 11,10"/></svg>,
+  List:   p=><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" {...p}><line x1="4" y1="5" x2="13" y2="5"/><line x1="4" y1="8" x2="13" y2="8"/><line x1="4" y1="11" x2="13" y2="11"/><circle cx="2" cy="5" r=".8" fill="currentColor" stroke="none"/><circle cx="2" cy="8" r=".8" fill="currentColor" stroke="none"/><circle cx="2" cy="11" r=".8" fill="currentColor" stroke="none"/></svg>,
+  Grid:   p=><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" {...p}><rect x="2" y="2" width="5" height="5" rx=".8"/><rect x="9" y="2" width="5" height="5" rx=".8"/><rect x="2" y="9" width="5" height="5" rx=".8"/><rect x="9" y="9" width="5" height="5" rx=".8"/></svg>,
+  Video:  p=><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" {...p}><rect x="1" y="3" width="10" height="10" rx="1.5"/><polyline points="11,6 15,4 15,12 11,10"/></svg>,
 };
 
 const Av=({initials,size=24,tone})=><div className="st-avatar" style={{width:size,height:size,fontSize:size*0.40,background:tone==='blue'?'linear-gradient(135deg,#1e3a8a,#3b82f6)':tone==='green'?'linear-gradient(135deg,#14532d,#22c55e)':tone==='violet'?'linear-gradient(135deg,#3b0764,#a855f7)':'linear-gradient(135deg,#5a060e,#cc1122)'}}>{initials}</div>;
@@ -369,9 +409,9 @@ function Sidebar({tab,setTab,me,collapsed,setCollapsed,openCount}){
     {k:'rig',       l:'Rig Dashboard',    i:I.Rig,   kbd:'G'},
     ...(me.role==='admin'?[{k:'staff', l:'Staff', i:I.Staff, kbd:'S'}]:[]),
   ];
-  const go=k=>{setTab(k);if(collapsed)setCollapsed(false)};
+  const go=k=>{setTab(k);if(window.innerWidth<=768)setCollapsed(true);else if(collapsed)setCollapsed(false)};
   return(
-    <aside className="st-side" style={{width:collapsed?52:240}}>
+    <aside className={`st-side${!collapsed?' mob-open':''}`} style={{width:collapsed?52:240}}>
       <div className="st-side-top">
         <button className="st-hamburger" onClick={()=>setCollapsed(c=>!c)} title={collapsed?'Expand':'Collapse'}><span/><span/><span/></button>
         {!collapsed&&(
@@ -382,7 +422,7 @@ function Sidebar({tab,setTab,me,collapsed,setCollapsed,openCount}){
         )}
       </div>
       {!collapsed&&(
-        <div className="st-side-search"><I.Search width="13" height="13"/><span style={{flex:1,fontSize:12,color:'rgba(255,252,246,0.40)'}}>Search</span><Kbd k="⌘K"/></div>
+        <div className="st-side-search"><I.Search width="13" height="13"/><span style={{flex:1,fontSize:12,color:'rgba(255,252,246,0.40)'}}>Search</span><Kbd k="Ctrl K"/></div>
       )}
       {!collapsed&&<div className="st-side-section">SUPPORT</div>}
       <nav className="st-nav">
@@ -538,6 +578,11 @@ function CustomerLookup({me}){
   const[tickets,setTickets]=useState([]);
   const[showModal,setShowModal]=useState(false);
   const[editData,setEditData]=useState({});
+  const[csvRows,setCsvRows]=useState([]);
+  const[showCSV,setShowCSV]=useState(false);
+  const[importing,setImporting]=useState(false);
+  const[importDone,setImportDone]=useState(0);
+  const csvRef=useRef(null);
 
   useEffect(()=>{
     fetch('/api/customers').then(r=>r.json()).then(d=>{const c=d.customers||[];setCustomers(c);if(c[0])setActive(c[0])}).catch(()=>setLoading(false));
@@ -555,10 +600,43 @@ function CustomerLookup({me}){
     setShowModal(false);
   };
 
+  const parseCSV=text=>{
+    const lines=text.trim().split(/\r?\n/);
+    if(lines.length<2)return[];
+    const headers=lines[0].split(',').map(h=>h.trim().replace(/^"|"$/g,'').toLowerCase());
+    return lines.slice(1).filter(l=>l.trim()).map(l=>{
+      const vals=[];let cur='',inQ=false;
+      for(const ch of l){if(ch==='"'){inQ=!inQ}else if(ch===','&&!inQ){vals.push(cur.trim());cur=''}else{cur+=ch}}
+      vals.push(cur.trim());
+      const row={};headers.forEach((h,i)=>row[h]=vals[i]||'');
+      return row;
+    });
+  };
+
+  const handleCSVFile=e=>{
+    const file=e.target.files?.[0];if(!file)return;
+    const reader=new FileReader();
+    reader.onload=ev=>{const rows=parseCSV(ev.target.result);setCsvRows(rows);setShowCSV(true);setImportDone(0)};
+    reader.readAsText(file);
+    e.target.value='';
+  };
+
+  const importCSV=async()=>{
+    setImporting(true);let done=0;
+    for(const row of csvRows){
+      if(!row.email&&!row.name)continue;
+      await fetch('/api/customers',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'create',name:row.name||'',email:row.email||'',rig:row.rig||row.simulator||'',city:row.city||'',purchase_date:row.purchase_date||row['purchase date']||'',motion_platform:row.motion_platform||row['motion platform']||'',wheelbase:row.wheelbase||''})}).catch(()=>{});
+      done++;setImportDone(done);
+    }
+    setImporting(false);
+    fetch('/api/customers').then(r=>r.json()).then(d=>setCustomers(d.customers||[]));
+    setTimeout(()=>setShowCSV(false),1000);
+  };
+
   return(
     <div className="st-page">
       <PageHead eyebrow="SUPPORT · LOOKUP" title="Customer lookup" sub="Search by name, email, or rig type."
-        right={<button className="st-btn-primary"><I.Plus width="13" height="13"/>Add customer</button>}
+        right={<div style={{display:'flex',gap:8}}><button className="st-btn-ghost" onClick={()=>csvRef.current?.click()}><I.Plus width="13" height="13"/>Import CSV</button><input ref={csvRef} type="file" accept=".csv,text/csv" style={{display:'none'}} onChange={handleCSVFile}/><button className="st-btn-primary"><I.Plus width="13" height="13"/>Add customer</button></div>}
       />
       <div className="st-search-big"><I.Search width="16" height="16"/><input className="st-search-input" placeholder="Search customers, emails…" value={q} onChange={e=>setQ(e.target.value)} autoFocus/></div>
       {loading&&<div className="st-loading"><Spin/> Loading…</div>}
@@ -624,6 +702,25 @@ function CustomerLookup({me}){
           </div>
         </div>
       )}
+      {showCSV&&(
+        <div className="st-overlay" onClick={()=>{if(!importing)setShowCSV(false)}}>
+          <div className="st-modal" style={{maxWidth:560}} onClick={e=>e.stopPropagation()}>
+            <div className="st-modal-head"><span className="st-modal-title">Import CSV — {csvRows.length} rows</span><button className="st-icon-btn" onClick={()=>setShowCSV(false)} disabled={importing}><I.X width="13" height="13"/></button></div>
+            <div style={{maxHeight:260,overflowY:'auto',marginBottom:14,background:'rgba(255,255,255,0.02)',border:'1px solid rgba(255,255,255,0.06)',borderRadius:8}}>
+              {csvRows.slice(0,20).map((r,i)=>(
+                <div key={i} style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,padding:'7px 12px',borderTop:i?'1px solid rgba(255,255,255,0.04)':'none',fontSize:12}}>
+                  <span style={{color:'#fff',fontWeight:500}}>{r.name||'—'}</span>
+                  <span style={{color:'rgba(255,252,246,0.50)'}}>{r.email||'—'}</span>
+                </div>
+              ))}
+              {csvRows.length>20&&<div style={{padding:'6px 12px',fontSize:11,color:'rgba(255,252,246,0.40)'}}>+{csvRows.length-20} more rows</div>}
+            </div>
+            <p style={{fontSize:12,color:'rgba(255,252,246,0.50)',marginBottom:14}}>Expected columns: <code style={{fontFamily:'var(--font-mono)',fontSize:11}}>name, email, rig, city, purchase_date, wheelbase</code></p>
+            {importing&&<div style={{fontSize:12,color:'rgba(255,252,246,0.62)',marginBottom:10}}>Importing… {importDone} / {csvRows.length}</div>}
+            <div className="st-modal-actions"><button className="st-btn-ghost" onClick={()=>setShowCSV(false)} disabled={importing}>Cancel</button><button className="st-btn-primary" onClick={importCSV} disabled={importing||csvRows.length===0}>{importing?<Spin/>:`Import ${csvRows.length} customers`}</button></div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -661,6 +758,7 @@ function Conversations(){
 }
 
 // ── NEWS MANAGER ──────────────────────────────────────────────────────────
+const SOURCE_CATS_ADMIN={'Motorsport.com':'esports','RaceDepartment':'esports','iRacing':'games','Asetek SimSports':'hardware','MOZA Racing':'hardware','Heusinkveld':'hardware','Vero Motion':'hardware','Qubic System':'hardware','BDH Racesim':'hardware'};
 function NewsManager(){
   const[pins,setPins]=useState([]);
   const[articles,setArticles]=useState([]);
@@ -668,6 +766,7 @@ function NewsManager(){
   const[showAdd,setShowAdd]=useState(false);
   const[newPin,setNewPin]=useState({title:'',source:'',url:'',summary:''});
   const[saving,setSaving]=useState(false);
+  const[feedTab,setFeedTab]=useState('all');
 
   const load=()=>{
     setLoading(true);
@@ -717,10 +816,17 @@ function NewsManager(){
       )}
       {!loading&&articles.length>0&&(
         <>
-          <div style={{fontSize:10,fontWeight:500,color:'rgba(255,252,246,0.40)',letterSpacing:'0.08em',textTransform:'uppercase',marginBottom:8}}>LATEST FEED ARTICLES</div>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8}}>
+            <div style={{fontSize:10,fontWeight:500,color:'rgba(255,252,246,0.40)',letterSpacing:'0.08em',textTransform:'uppercase'}}>LATEST FEED ARTICLES</div>
+            <div style={{display:'flex',gap:2}}>
+              {['all','esports','hardware','games'].map(t=>(
+                <button key={t} onClick={()=>setFeedTab(t)} style={{padding:'4px 10px',background:feedTab===t?'rgba(204,17,34,0.12)':'rgba(255,255,255,0.03)',border:feedTab===t?'1px solid rgba(204,17,34,0.30)':'1px solid rgba(255,255,255,0.06)',borderRadius:5,color:feedTab===t?'#f8505f':'rgba(255,252,246,0.62)',fontSize:11,fontWeight:500,cursor:'pointer',textTransform:'capitalize'}}>{t}</button>
+              ))}
+            </div>
+          </div>
           <div className="st-table">
             <div className="st-table-head st-table-head-news"><div>Source</div><div>Title</div><div>Date</div><div>Status</div><div></div></div>
-            {articles.slice(0,20).map((n,i)=>(
+            {(feedTab==='all'?articles:articles.filter(a=>SOURCE_CATS_ADMIN[a.source]===feedTab)).slice(0,20).map((n,i)=>(
               <div key={i} className="st-table-row st-table-row-news">
                 <div className="st-row-text" style={{fontWeight:600}}>{n.source}</div>
                 <div className="st-row-text st-wrap-text">{n.title}</div>
@@ -731,6 +837,7 @@ function NewsManager(){
                 </div>
               </div>
             ))}
+            {(feedTab==='all'?articles:articles.filter(a=>SOURCE_CATS_ADMIN[a.source]===feedTab)).length===0&&<div className="st-empty">No articles in this category.</div>}
           </div>
         </>
       )}
@@ -756,21 +863,50 @@ function NewsManager(){
 function KBManager(){
   const[files,setFiles]=useState([]);
   const[loading,setLoading]=useState(true);
-  const[filter,setFilter]=useState('all');
-  useEffect(()=>{fetch('/api/kb').then(r=>r.json()).then(d=>{setFiles(d.files||[]);setLoading(false)}).catch(()=>setLoading(false))},[]);
-  const counts={all:files.length};
-  const filtered=files;
+  const[view,setView]=useState('list');
+  const[videos,setVideos]=useState([]);
+  const[showAddVideo,setShowAddVideo]=useState(false);
+  const[videoForm,setVideoForm]=useState({title:'',url:'',notes:'',category:''});
+  const[savingVideo,setSavingVideo]=useState(false);
+
+  const loadVideos=()=>fetch('/api/kb-videos').then(r=>r.json()).then(d=>setVideos(d.videos||[])).catch(()=>{});
+  useEffect(()=>{
+    fetch('/api/kb').then(r=>r.json()).then(d=>{setFiles(d.files||[]);setLoading(false)}).catch(()=>setLoading(false));
+    loadVideos();
+  },[]);
+
+  const getThumb=url=>{const id=url?.match(/\/d\/([^/]+)/)?.[1];return id?`https://drive.google.com/thumbnail?id=${id}&sz=w400`:null};
+  const getYTEmbed=url=>{const m=url?.match(/(?:v=|youtu\.be\/|embed\/)([A-Za-z0-9_-]{11})/);return m?`https://www.youtube.com/embed/${m[1]}?rel=0`:null};
+
+  const addVideo=async()=>{
+    setSavingVideo(true);
+    await fetch('/api/kb-videos',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(videoForm)});
+    setSavingVideo(false);setShowAddVideo(false);setVideoForm({title:'',url:'',notes:'',category:''});loadVideos();
+  };
+  const delVideo=async id=>{if(!confirm('Delete this video?'))return;await fetch('/api/kb-videos',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});loadVideos()};
+
   return(
     <div className="st-page">
-      <PageHead eyebrow="CONTENT · KNOWLEDGE BASE" title="KB manager" sub={`${files.length} articles in the knowledge base. Click any row to preview.`}
-        right={<button className="st-btn-primary"><I.Plus width="13" height="13"/>New article</button>}
+      <PageHead eyebrow="CONTENT · KNOWLEDGE BASE" title="KB manager" sub={`${files.length} articles · ${videos.length} videos`}
+        right={<div style={{display:'flex',gap:8,alignItems:'center'}}><div className="st-kb-view-wrap"><button className={`st-kb-vbtn${view==='list'?' on':''}`} onClick={()=>setView('list')} title="List view"><I.List width="13" height="13"/></button><button className={`st-kb-vbtn${view==='grid'?' on':''}`} onClick={()=>setView('grid')} title="Grid view"><I.Grid width="13" height="13"/></button></div><button className="st-btn-ghost" onClick={()=>setShowAddVideo(true)}><I.Video width="13" height="13"/>Add video</button><button className="st-btn-primary"><I.Plus width="13" height="13"/>New article</button></div>}
       />
       {loading&&<div className="st-loading"><Spin/> Loading…</div>}
-      {!loading&&(
-        <div className="st-table">
+      {!loading&&view==='grid'&&(
+        <div className="st-kb-grid">
+          {files.map(f=>{const thumb=getThumb(f.previewUrl);return(
+            <div key={f.id} className="st-kb-card" onClick={()=>f.previewUrl&&window.open(f.previewUrl,'_blank')}>
+              <div className="st-kb-thumb">{thumb?<img src={thumb} alt={f.name} onError={e=>e.target.style.display='none'}/>:<I.Book width="28" height="28" style={{color:'rgba(255,252,246,0.20)'}}/>}</div>
+              <div className="st-kb-card-body"><div className="st-kb-card-title">{f.name}</div><div className="st-kb-card-cat">{f.category||'General'}</div></div>
+            </div>
+          )})}
+          {files.length===0&&<div className="st-empty" style={{gridColumn:'1/-1'}}>No articles found.</div>}
+        </div>
+      )}
+      {!loading&&view==='list'&&(
+        <div className="st-table" style={{marginBottom:24}}>
           <div className="st-table-head st-table-head-kb"><div>ID</div><div>Title</div><div>Category</div><div>Updated</div><div>Author</div><div>Views</div><div>Status</div><div></div></div>
-          {filtered.length===0&&<div className="st-empty">No articles found.</div>}
-          {filtered.map(f=>(
+          {files.length===0&&<div className="st-empty">No articles found.</div>}
+          {files.map(f=>(
             <div key={f.id} className="st-table-row st-table-row-kb">
               <div className="st-row-id mono" style={{fontSize:10}}>{f.id?.slice(0,8)}</div>
               <div className="st-row-text st-wrap-text">{f.name}</div>
@@ -784,6 +920,36 @@ function KBManager(){
               </div>
             </div>
           ))}
+        </div>
+      )}
+      {videos.length>0&&(
+        <>
+          <div style={{fontSize:10,fontWeight:500,color:'rgba(255,252,246,0.40)',letterSpacing:'0.08em',textTransform:'uppercase',marginBottom:12}}>VIDEO RESOURCES</div>
+          {videos.map(v=>{const embed=getYTEmbed(v.url);return(
+            <div key={v.id} className="st-video-card">
+              {embed&&<div className="st-video-player"><iframe src={embed} allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowFullScreen/></div>}
+              <div className="st-video-card-body">
+                <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:10}}>
+                  <div><div className="st-video-title">{v.title}</div>{v.notes&&<div className="st-video-notes">{v.notes}</div>}{v.category&&<Pill tone="ghost">{v.category}</Pill>}</div>
+                  <button className="st-btn-danger st-btn-sm" onClick={()=>delVideo(v.id)} style={{flexShrink:0}}><I.Trash width="11" height="11"/>Delete</button>
+                </div>
+              </div>
+            </div>
+          )})}
+        </>
+      )}
+      {showAddVideo&&(
+        <div className="st-overlay" onClick={()=>setShowAddVideo(false)}>
+          <div className="st-modal" onClick={e=>e.stopPropagation()}>
+            <div className="st-modal-head"><span className="st-modal-title">Add video resource</span><button className="st-icon-btn" onClick={()=>setShowAddVideo(false)}><I.X width="13" height="13"/></button></div>
+            <div className="st-modal-body">
+              <div className="st-form-field"><label className="st-form-label">Title *</label><input className="st-input" value={videoForm.title} onChange={e=>setVideoForm(f=>({...f,title:e.target.value}))} placeholder="e.g. How to calibrate your motion platform"/></div>
+              <div className="st-form-field"><label className="st-form-label">YouTube URL *</label><input className="st-input" type="url" value={videoForm.url} onChange={e=>setVideoForm(f=>({...f,url:e.target.value}))} placeholder="https://www.youtube.com/watch?v=…"/></div>
+              <div className="st-form-field"><label className="st-form-label">Notes</label><textarea className="st-input st-textarea" rows={3} value={videoForm.notes} onChange={e=>setVideoForm(f=>({...f,notes:e.target.value}))} placeholder="Short description shown below the video…"/></div>
+              <div className="st-form-field"><label className="st-form-label">Category</label><input className="st-input" value={videoForm.category} onChange={e=>setVideoForm(f=>({...f,category:e.target.value}))} placeholder="e.g. Hardware, Software, Setup"/></div>
+            </div>
+            <div className="st-modal-actions"><button className="st-btn-ghost" onClick={()=>setShowAddVideo(false)}>Cancel</button><button className="st-btn-primary" onClick={addVideo} disabled={!videoForm.title||!videoForm.url||savingVideo}>{savingVideo?<Spin/>:'Add video'}</button></div>
+          </div>
         </div>
       )}
     </div>
@@ -1081,6 +1247,8 @@ function App(){
 
   return(
     <div className="st-app">
+      <button className="st-mob-ham" onClick={()=>setCollapsed(false)} aria-label="Open menu"><span/><span/><span/></button>
+      <div className={`st-mob-backdrop${!collapsed?' show':''}`} onClick={()=>setCollapsed(true)}/>
       <Sidebar tab={tab} setTab={setTab} me={me} collapsed={collapsed} setCollapsed={setCollapsed} openCount={openCount}/>
       <main className="st-main">
         {tab==='queue'     &&<TicketQueue me={me}/>}
