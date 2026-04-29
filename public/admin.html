@@ -237,6 +237,22 @@ button,input,textarea,select{font-family:inherit;color:inherit}
 .st-cat-n{color:rgba(255,252,246,0.62);text-align:right;font-family:var(--font-mono)}
 /* RIG / AGENT CONFIG */
 .st-rig-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px}
+/* LIVE RIG CARDS */
+.st-rig-grid-all{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-bottom:24px}
+.st-rig-live-card{background:rgba(255,255,255,0.015);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:16px}
+.st-rig-live-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:8px}
+.st-rig-live-name{font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st-rig-live-game{font-size:11px;font-family:var(--font-mono);color:rgba(255,252,246,0.50);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;text-align:right}
+.st-rig-metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.st-metric{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:7px;padding:8px 10px}
+.st-metric-label{font-size:10px;color:rgba(255,252,246,0.40);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px}
+.st-metric-value{font-size:18px;font-family:var(--font-display);line-height:1.1}
+.st-metric-value.warn{color:#f59e0b}.st-metric-value.crit{color:#f8505f}.st-metric-value.ok{color:#22c55e}
+.st-rig-usb{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
+.st-usb-badge{display:inline-flex;padding:3px 8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:5px;font-size:10px;color:rgba(255,252,246,0.70)}
+.st-update-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.20);border-radius:5px;font-size:11px;color:#f59e0b}
+.st-rig-last-seen{font-size:10px;color:rgba(255,252,246,0.30);margin-top:6px}
+.st-lap-pb{display:inline-flex;padding:1px 6px;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.25);border-radius:4px;font-size:10px;color:#f59e0b;font-weight:600;margin-left:4px}
 .st-config-card{padding:16px 18px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:10px}
 .st-config-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .st-config-card-title{font-size:13px;font-weight:600;color:#fff}
@@ -330,6 +346,7 @@ button,input,textarea,select{font-family:inherit;color:inherit}
   .st-lookup-grid{grid-template-columns:1fr}
   .st-stat-grid{grid-template-columns:repeat(2,1fr)}
   .st-rig-grid{grid-template-columns:1fr}
+  .st-rig-grid-all{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -662,6 +679,8 @@ function CustomerLookup({me}){
   const[showAddCust,setShowAddCust]=useState(false);
   const[addForm,setAddForm]=useState({name:'',email:'',rig:'',city:'',purchase_date:'',motion_platform:'',wheelbase:'',specialist_name:'',specialist_email:''});
   const[addSaving,setAddSaving]=useState(false);
+  const[laps,setLaps]=useState([]);
+  const[lapsLoading,setLapsLoading]=useState(false);
   const[csvRows,setCsvRows]=useState([]);
   const[showCSV,setShowCSV]=useState(false);
   const[importing,setImporting]=useState(false);
@@ -673,6 +692,13 @@ function CustomerLookup({me}){
     fetch('/api/tickets').then(r=>r.json()).then(d=>setTickets(d.tickets||[])).catch(()=>{});
     setLoading(false);
   },[]);
+
+  useEffect(()=>{
+    if(!active?.email)return;
+    setLapsLoading(true);
+    fetch('/api/agent?view=laps&customer_email='+encodeURIComponent(active.email))
+      .then(r=>r.json()).then(d=>setLaps(d.laps||[])).catch(()=>setLaps([])).finally(()=>setLapsLoading(false));
+  },[active?.email]);
 
   const matches=q?customers.filter(c=>c.name?.toLowerCase().includes(q.toLowerCase())||c.email?.toLowerCase().includes(q.toLowerCase())||c.rig?.toLowerCase().includes(q.toLowerCase())):customers;
   const custTickets=active?tickets.filter(t=>t.email&&active.email&&t.email.toLowerCase()===active.email.toLowerCase()):[];
@@ -777,6 +803,25 @@ function CustomerLookup({me}){
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+              {(lapsLoading||laps.length>0)&&(
+                <div className="st-customer-section">
+                  <div className="st-customer-section-head"><h3>Lap times</h3><span style={{fontSize:11,color:'rgba(255,252,246,0.40)'}}>{laps.length} recorded</span></div>
+                  {lapsLoading&&<div style={{padding:'8px 0',color:'rgba(255,252,246,0.40)',fontSize:12}}><Spin/> Loading…</div>}
+                  {!lapsLoading&&(
+                    <div className="st-mini-table">
+                      {laps.slice(0,10).map((l,i)=>(
+                        <div key={l.id||i} className="st-mini-row">
+                          <span className="st-row-id mono">{l.lap_time_formatted||l.lap_time_ms+'ms'}</span>
+                          <span className="st-mini-text">{l.track||'—'}{l.car?<span style={{color:'rgba(255,252,246,0.40)',marginLeft:6}}>{l.car}</span>:null}</span>
+                          {l.game&&<Pill tone="ghost">{l.game}</Pill>}
+                          {l.is_personal_best&&<span className="st-lap-pb">PB</span>}
+                          <span className="st-mini-date mono">{l.recorded_at?fmtDate(l.recorded_at):''}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -1438,48 +1483,103 @@ function Analytics(){
 }
 
 // ── RIG DASHBOARD ─────────────────────────────────────────────────────────
+function tempColor(val,warn,crit){
+  if(val==null)return '';
+  if(val>=crit)return 'crit';
+  if(val>=warn)return 'warn';
+  return 'ok';
+}
+function fmtLastSeen(iso){
+  if(!iso)return 'never';
+  const diff=Math.floor((Date.now()-new Date(iso).getTime())/1000);
+  if(diff<0)return 'just now';
+  if(diff<60)return diff+'s ago';
+  if(diff<3600)return Math.floor(diff/60)+'m ago';
+  return Math.floor(diff/3600)+'h ago';
+}
+function RigCard({rig}){
+  const usb=React.useMemo(()=>{try{return JSON.parse(rig.usb_devices||'[]')}catch{return[]}},[rig.usb_devices]);
+  const updates=React.useMemo(()=>{try{return JSON.parse(rig.software_updates||'[]')}catch{return[]}},[rig.software_updates]);
+  const isOnline=rig.last_seen&&(Date.now()-new Date(rig.last_seen).getTime())<30000;
+  return(
+    <div className="st-rig-live-card">
+      <div className="st-rig-live-head">
+        <div style={{display:'flex',alignItems:'center',gap:7,minWidth:0}}>
+          <span className={'st-dot'+(isOnline?' st-dot-green':'')} style={isOnline?{}:{background:'rgba(255,255,255,0.15)'}}/>
+          <span className="st-rig-live-name">{rig.customer_email}</span>
+        </div>
+        {rig.game_active&&<span className="st-rig-live-game">{rig.game_active}</span>}
+      </div>
+      <div className="st-rig-metrics">
+        <div className="st-metric"><div className="st-metric-label">CPU Temp</div><div className={'st-metric-value '+tempColor(rig.cpu_temp,75,90)}>{rig.cpu_temp!=null?rig.cpu_temp+'°C':'—'}</div></div>
+        <div className="st-metric"><div className="st-metric-label">GPU Temp</div><div className={'st-metric-value '+tempColor(rig.gpu_temp,80,95)}>{rig.gpu_temp!=null?rig.gpu_temp+'°C':'—'}</div></div>
+        <div className="st-metric"><div className="st-metric-label">RAM</div><div className={'st-metric-value '+tempColor(rig.ram_usage,80,92)}>{rig.ram_usage!=null?rig.ram_usage+'%':'—'}</div></div>
+        <div className="st-metric"><div className="st-metric-label">FPS</div><div className={'st-metric-value '+(rig.fps!=null?(rig.fps<30?'crit':rig.fps<60?'warn':'ok'):'')}>{rig.fps!=null?rig.fps:'—'}</div></div>
+      </div>
+      {usb.length>0&&<div className="st-rig-usb">{usb.slice(0,4).map((d,i)=><span key={i} className="st-usb-badge">{typeof d==='string'?d:d.name||d.device_name||JSON.stringify(d)}</span>)}{usb.length>4&&<span className="st-usb-badge">+{usb.length-4} more</span>}</div>}
+      {updates.length>0&&<div style={{display:'flex',flexWrap:'wrap',gap:4,marginBottom:6}}>{updates.map((u,i)=><span key={i} className="st-update-badge"><svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 3a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 8 4zm0 7.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></svg>{typeof u==='string'?u:u.app||u.name||JSON.stringify(u)} update</span>)}</div>}
+      <div className="st-rig-last-seen">Last seen: {fmtLastSeen(rig.last_seen)}</div>
+    </div>
+  );
+}
 function RigDashboard(){
   const[config,setConfig]=useState(null);
   const[anns,setAnns]=useState([]);
+  const[rigs,setRigs]=useState([]);
   const[loading,setLoading]=useState(true);
+  const[rigsLoading,setRigsLoading]=useState(true);
   const[showAdd,setShowAdd]=useState(false);
   const[newAnn,setNewAnn]=useState('');
-  useEffect(()=>{
-    fetch('/api/agent-config').then(r=>r.json()).then(d=>{
-      if(d.config){setConfig(d.config);setAnns(Array.isArray(d.config.announcements)?d.config.announcements:[])}
-      setLoading(false);
-    }).catch(()=>setLoading(false));
-  },[]);
+
+  const loadConfig=()=>fetch('/api/agent').then(r=>r.json()).then(d=>{if(d.config){setConfig(d.config);setAnns(Array.isArray(d.config.announcements)?d.config.announcements:[])}setLoading(false)}).catch(()=>setLoading(false));
+  const loadRigs=()=>fetch('/api/agent?view=telemetry').then(r=>r.json()).then(d=>{setRigs(d.rigs||[]);setRigsLoading(false)}).catch(()=>setRigsLoading(false));
+
+  useEffect(()=>{loadConfig();loadRigs();},[]);
+  useEffect(()=>{const id=setInterval(loadRigs,10000);return()=>clearInterval(id);},[]);
 
   const saveAnn=async()=>{
     const next=[...anns,{id:Date.now().toString(),message:newAnn,created:new Date().toISOString()}];
-    await fetch('/api/agent-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({announcements:next,version:config?.version||'1.0',updated_at:new Date().toISOString()})});
+    await fetch('/api/agent',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'config',announcements:next,version:config?.version||'1.0',updated_at:new Date().toISOString()})});
     setAnns(next);setShowAdd(false);setNewAnn('');
   };
 
+  const onlineCount=rigs.filter(r=>r.last_seen&&(Date.now()-new Date(r.last_seen).getTime())<30000).length;
+
   return(
     <div className="st-page">
-      <PageHead eyebrow="AGENT · DASHBOARD" title={<>Rig Dashboard <span style={{fontSize:13,fontFamily:'var(--font-mono)',color:'rgba(255,252,246,0.40)',fontWeight:400,letterSpacing:0,background:'rgba(255,255,255,0.04)',padding:'2px 9px',borderRadius:5,border:'1px solid rgba(255,255,255,0.06)'}}>BETA</span></>} sub="View agent configuration, telemetry collection settings, and customer announcements."/>
-      {loading&&<div className="st-loading"><Spin/> Loading…</div>}
-      {!loading&&config&&(
-        <div className="st-rig-grid">
-          <div className="st-config-card">
-            <div className="st-config-card-head"><span className="st-config-card-title">Collection</span></div>
-            <div className="st-config-row"><span className="st-config-key">Interval</span><span className="st-config-val">{config.collection_interval_seconds||5}s</span></div>
-            <div className="st-config-row"><span className="st-config-key">CPU temp</span><span className="st-config-val">{config.collect_cpu_temp!==false?<span style={{color:'#22c55e'}}>On</span>:<span style={{color:'#f8505f'}}>Off</span>}</span></div>
-            <div className="st-config-row"><span className="st-config-key">GPU temp</span><span className="st-config-val">{config.collect_gpu_temp!==false?<span style={{color:'#22c55e'}}>On</span>:<span style={{color:'#f8505f'}}>Off</span>}</span></div>
-            <div className="st-config-row"><span className="st-config-key">RAM</span><span className="st-config-val">{config.collect_ram!==false?<span style={{color:'#22c55e'}}>On</span>:<span style={{color:'#f8505f'}}>Off</span>}</span></div>
-            <div className="st-config-row"><span className="st-config-key">FPS</span><span className="st-config-val">{config.collect_fps!==false?<span style={{color:'#22c55e'}}>On</span>:<span style={{color:'#f8505f'}}>Off</span>}</span></div>
-          </div>
-          <div className="st-config-card">
-            <div className="st-config-card-head"><span className="st-config-card-title">Events</span></div>
-            <div className="st-config-row"><span className="st-config-key">USB devices</span><span className="st-config-val">{config.collect_usb_devices!==false?<span style={{color:'#22c55e'}}>On</span>:<span style={{color:'#f8505f'}}>Off</span>}</span></div>
-            <div className="st-config-row"><span className="st-config-key">Event log</span><span className="st-config-val">{config.collect_event_log!==false?<span style={{color:'#22c55e'}}>On</span>:<span style={{color:'#f8505f'}}>Off</span>}</span></div>
-            <div className="st-config-row"><span className="st-config-key">Version</span><span className="st-config-val mono">{config.version||'—'}</span></div>
-          </div>
+      <PageHead eyebrow="AGENT · DASHBOARD" title={<>Rig Dashboard <span style={{fontSize:13,fontFamily:'var(--font-mono)',color:'rgba(255,252,246,0.40)',fontWeight:400,letterSpacing:0,background:'rgba(255,255,255,0.04)',padding:'2px 9px',borderRadius:5,border:'1px solid rgba(255,255,255,0.06)'}}>BETA</span></>} sub="Live telemetry from all connected customer rigs. Auto-refreshes every 10 seconds."/>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
+        <div style={{display:'flex',alignItems:'center',gap:10}}>
+          <div style={{fontSize:14,fontWeight:600,color:'rgba(255,252,246,0.86)'}}>Connected rigs</div>
+          {!rigsLoading&&<Pill tone={onlineCount>0?'green':'ghost'} dot>{onlineCount} online · {rigs.length} total</Pill>}
         </div>
+        <button className="st-btn-ghost st-btn-sm" onClick={loadRigs}><svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor" style={{marginRight:4}}><path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/><path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/></svg>Refresh</button>
+      </div>
+      {rigsLoading&&<div className="st-loading"><Spin/> Loading rigs…</div>}
+      {!rigsLoading&&rigs.length===0&&<div className="st-empty" style={{marginBottom:24}}>No rigs reporting yet. Install the Podium 1 agent on a customer machine to start collecting telemetry.</div>}
+      {!rigsLoading&&rigs.length>0&&<div className="st-rig-grid-all">{rigs.map(r=><RigCard key={r.customer_email} rig={r}/>)}</div>}
+      {loading&&<div className="st-loading"><Spin/> Loading config…</div>}
+      {!loading&&config&&(
+        <>
+          <div style={{fontSize:14,fontWeight:600,color:'rgba(255,252,246,0.86)',marginBottom:10}}>Agent configuration</div>
+          <div className="st-rig-grid" style={{marginBottom:24}}>
+            <div className="st-config-card">
+              <div className="st-config-card-head"><span className="st-config-card-title">Collection</span></div>
+              <div className="st-config-row"><span className="st-config-key">Interval</span><span className="st-config-val">{config.collection_interval_seconds||5}s</span></div>
+              <div className="st-config-row"><span className="st-config-key">CPU temp</span><span className="st-config-val">{config.collect_cpu_temp!==false?<span style={{color:'#22c55e'}}>On</span>:<span style={{color:'#f8505f'}}>Off</span>}</span></div>
+              <div className="st-config-row"><span className="st-config-key">GPU temp</span><span className="st-config-val">{config.collect_gpu_temp!==false?<span style={{color:'#22c55e'}}>On</span>:<span style={{color:'#f8505f'}}>Off</span>}</span></div>
+              <div className="st-config-row"><span className="st-config-key">RAM</span><span className="st-config-val">{config.collect_ram!==false?<span style={{color:'#22c55e'}}>On</span>:<span style={{color:'#f8505f'}}>Off</span>}</span></div>
+              <div className="st-config-row"><span className="st-config-key">FPS</span><span className="st-config-val">{config.collect_fps!==false?<span style={{color:'#22c55e'}}>On</span>:<span style={{color:'#f8505f'}}>Off</span>}</span></div>
+            </div>
+            <div className="st-config-card">
+              <div className="st-config-card-head"><span className="st-config-card-title">Events</span></div>
+              <div className="st-config-row"><span className="st-config-key">USB devices</span><span className="st-config-val">{config.collect_usb_devices!==false?<span style={{color:'#22c55e'}}>On</span>:<span style={{color:'#f8505f'}}>Off</span>}</span></div>
+              <div className="st-config-row"><span className="st-config-key">Event log</span><span className="st-config-val">{config.collect_event_log!==false?<span style={{color:'#22c55e'}}>On</span>:<span style={{color:'#f8505f'}}>Off</span>}</span></div>
+              <div className="st-config-row"><span className="st-config-key">Version</span><span className="st-config-val mono">{config.version||'—'}</span></div>
+            </div>
+          </div>
+        </>
       )}
-      {!loading&&!config&&<div className="st-empty">No agent configuration found. The Podium 1 rig agent has not reported in yet.</div>}
       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
         <div style={{fontSize:14,fontWeight:600,color:'rgba(255,252,246,0.86)'}}>Customer announcements</div>
         <button className="st-btn-primary" onClick={()=>setShowAdd(true)}><I.Plus width="13" height="13"/>Add announcement</button>
@@ -1492,7 +1592,7 @@ function RigDashboard(){
             <div className="st-row-text st-wrap-text">{a.message||a.text||String(a)}</div>
             <div className="st-row-meta mono">{a.created?fmtDate(a.created):''}</div>
             <div><Pill tone="green" dot>Active</Pill></div>
-            <div className="st-row-actions"><button className="st-btn-danger st-btn-sm" onClick={async()=>{const next=anns.filter(x=>(x.id||x)!==(a.id||a));setAnns(next);await fetch('/api/agent-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({announcements:next,version:config?.version||'1.0',updated_at:new Date().toISOString()})})}}><I.Trash width="12" height="12"/></button></div>
+            <div className="st-row-actions"><button className="st-btn-danger st-btn-sm" onClick={async()=>{const next=anns.filter(x=>(x.id||x)!==(a.id||a));setAnns(next);await fetch('/api/agent',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'config',announcements:next,version:config?.version||'1.0',updated_at:new Date().toISOString()})})}}><I.Trash width="12" height="12"/></button></div>
           </div>
         ))}
       </div>

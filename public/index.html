@@ -315,6 +315,28 @@ button,input,textarea,select{font-family:inherit;color:inherit}
 .lin-search-result-meta{margin-left:auto;font-size:11px;color:rgba(255,252,246,0.35);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px}
 .lin-search-empty{padding:28px;text-align:center;font-size:13px;color:rgba(255,252,246,0.40)}
 .lin-search-hints{display:flex;gap:16px;padding:9px 16px;font-size:11px;color:rgba(255,252,246,0.28);border-top:1px solid rgba(255,255,255,0.05)}
+/* MY RIG PAGE */
+.lin-rig-health-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.lin-rig-metric{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:14px}
+.lin-rig-metric-label{font-size:10px;color:rgba(255,252,246,0.40);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px}
+.lin-rig-metric-value{font-size:28px;font-family:var(--font-display);line-height:1}
+.lin-rig-metric-value.warn{color:#f59e0b}.lin-rig-metric-value.crit{color:#f8505f}.lin-rig-metric-value.ok{color:#22c55e}.lin-rig-metric-value.idle{color:rgba(255,252,246,0.40)}
+.lin-rig-metric-sub{font-size:11px;color:rgba(255,252,246,0.40);margin-top:5px}
+.lin-rig-section{margin-bottom:22px}
+.lin-rig-section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.lin-rig-section-title{font-size:13px;font-weight:600;color:rgba(255,252,246,0.86)}
+.lin-usb-badge{display:inline-flex;padding:4px 9px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:5px;font-size:11px;color:rgba(255,252,246,0.70);margin:2px}
+.lin-update-alert{display:flex;align-items:center;gap:8px;padding:10px 12px;background:rgba(245,158,11,0.07);border:1px solid rgba(245,158,11,0.18);border-radius:7px;margin-bottom:8px;font-size:12px;color:rgba(255,252,246,0.86)}
+.lin-update-icon{color:#f59e0b;flex-shrink:0}
+.lin-lap-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:12px}
+.lin-lap-row:last-child{border-bottom:none}
+.lin-lap-time{font-family:var(--font-mono);font-weight:600;color:#fff;min-width:80px}
+.lin-lap-track{flex:1;color:rgba(255,252,246,0.86)}
+.lin-lap-car{color:rgba(255,252,246,0.40);font-size:11px}
+.lin-lap-pb{display:inline-flex;padding:1px 6px;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.25);border-radius:4px;font-size:10px;color:#f59e0b;font-weight:600;margin-left:4px}
+.lin-rig-offline{padding:32px 24px;text-align:center;color:rgba(255,252,246,0.40);font-size:13px;line-height:1.6}
+.lin-rig-offline-icon{font-size:32px;margin-bottom:12px}
+@media(max-width:768px){.lin-rig-health-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -345,6 +367,7 @@ const Ico={
   Dl:      p=><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2"/><polyline points="5,7 8,10 11,7"/><line x1="8" y1="2" x2="8" y2="10"/></svg>,
   List:    p=><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" {...p}><line x1="6" y1="4" x2="14" y2="4"/><line x1="6" y1="8" x2="14" y2="8"/><line x1="6" y1="12" x2="14" y2="12"/><circle cx="2.5" cy="4" r="1" fill="currentColor" stroke="none"/><circle cx="2.5" cy="8" r="1" fill="currentColor" stroke="none"/><circle cx="2.5" cy="12" r="1" fill="currentColor" stroke="none"/></svg>,
   Grid:    p=><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...p}><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>,
+  Rig:     p=><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...p}><rect x="1" y="4" width="14" height="8" rx="1.5"/><line x1="4" y1="7" x2="4" y2="9"/><line x1="7" y1="6" x2="7" y2="10"/><line x1="10" y1="7" x2="10" y2="9"/><line x1="1" y1="12" x2="15" y2="12"/></svg>,
 };
 
 const Av=({initials,size=28})=><div className="lin-avatar" style={{width:size,height:size,fontSize:Math.round(size*0.36)}}>{initials}</div>;
@@ -442,6 +465,7 @@ function Sidebar({tab,setTab,user,collapsed,setCollapsed,onOpenSearch,onLogout})
     {k:'ticket', l:'Submit a Ticket', i:Ico.Ticket, kbd:'T'},
     {k:'rufus',  l:'Ask RUFUS',       i:Ico.Spark,  kbd:'R',online:true},
     {k:'news',   l:'Sim Racing News', i:Ico.News,   kbd:'N'},
+    {k:'rig',    l:'My Rig',          i:Ico.Rig,    kbd:'G'},
   ];
   const initials_=user.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
   const go=k=>{
@@ -914,6 +938,172 @@ function NewsPage(){
   );
 }
 
+// ── MY RIG PAGE ───────────────────────────────────────────────────────────
+function rigTempColor(val,warn,crit){
+  if(val==null)return 'idle';
+  if(val>=crit)return 'crit';
+  if(val>=warn)return 'warn';
+  return 'ok';
+}
+function RigPage({user}){
+  const[rig,setRig]=useState(null);
+  const[laps,setLaps]=useState([]);
+  const[loading,setLoading]=useState(true);
+
+  const loadData=()=>{
+    const email=encodeURIComponent(user.email);
+    Promise.all([
+      fetch('/api/agent?view=telemetry&customer_email='+email).then(r=>r.json()).catch(()=>({rigs:[]})),
+      fetch('/api/agent?view=laps&customer_email='+email).then(r=>r.json()).catch(()=>({laps:[]})),
+    ]).then(([telData,lapData])=>{
+      const rigs=telData.rigs||[];
+      setRig(rigs[0]||null);
+      setLaps(lapData.laps||[]);
+      setLoading(false);
+    });
+  };
+  useEffect(()=>{loadData();},[user.email]);
+  useEffect(()=>{const id=setInterval(loadData,10000);return()=>clearInterval(id);},[user.email]);
+
+  const usb=React.useMemo(()=>{try{return JSON.parse(rig?.usb_devices||'[]')}catch{return[]}},[rig?.usb_devices]);
+  const updates=React.useMemo(()=>{try{return JSON.parse(rig?.software_updates||'[]')}catch{return[]}},[rig?.software_updates]);
+
+  const isOnline=rig?.last_seen&&(Date.now()-new Date(rig.last_seen).getTime())<30000;
+  const pbs=laps.filter(l=>l.is_personal_best);
+
+  return(
+    <div className="lin-page" style={{maxWidth:700}}>
+      <div style={{marginBottom:22}}>
+        <div style={{fontFamily:'var(--font-display)',fontSize:11,letterSpacing:'0.18em',color:'rgba(255,252,246,0.40)',marginBottom:8}}>MY RIG · HEALTH MONITOR</div>
+        <div style={{display:'flex',alignItems:'center',gap:10}}>
+          <h1 style={{fontSize:22,fontWeight:600,letterSpacing:'-0.5px'}}>Rig Dashboard</h1>
+          {!loading&&<span style={{display:'inline-flex',alignItems:'center',gap:5,fontSize:11,padding:'2px 8px',borderRadius:5,background:isOnline?'rgba(34,197,94,0.10)':'rgba(255,255,255,0.04)',border:'1px solid '+(isOnline?'rgba(34,197,94,0.20)':'rgba(255,255,255,0.07)'),color:isOnline?'#22c55e':'rgba(255,252,246,0.40)'}}>
+            <span style={{width:5,height:5,borderRadius:'50%',background:'currentColor',display:'inline-block'}}/>
+            {isOnline?'Agent online':'Agent offline'}
+          </span>}
+        </div>
+        {!loading&&rig?.last_seen&&<div style={{fontSize:11,color:'rgba(255,252,246,0.40)',marginTop:5}}>Last update: {fmtDate(rig.last_seen)}</div>}
+      </div>
+
+      {loading&&<div style={{color:'rgba(255,252,246,0.40)',fontSize:13,padding:'40px 0',textAlign:'center'}}><Spin/> Loading rig data…</div>}
+
+      {!loading&&!rig&&(
+        <div className="lin-rig-offline">
+          <div className="lin-rig-offline-icon">🖥️</div>
+          <div style={{fontWeight:600,color:'rgba(255,252,246,0.70)',marginBottom:6}}>Agent not installed</div>
+          <div>Install the Podium 1 Rig Agent on your simulator PC to see live telemetry here.</div>
+          <a href="https://github.com/podium1racing/p1-support-portal/tree/main/agent" target="_blank" rel="noopener noreferrer"
+            style={{display:'inline-flex',alignItems:'center',gap:6,marginTop:16,padding:'8px 16px',background:'#CC1122',borderRadius:7,color:'#fff',textDecoration:'none',fontSize:13,fontWeight:500}}>
+            <Ico.Dl width="13" height="13"/> Download agent installer
+          </a>
+        </div>
+      )}
+
+      {!loading&&rig&&(
+        <>
+          {/* System health */}
+          <div className="lin-rig-section">
+            <div className="lin-rig-section-head">
+              <span className="lin-rig-section-title">System health</span>
+              {rig.game_active&&<span style={{fontSize:11,fontFamily:'var(--font-mono)',color:'rgba(255,252,246,0.50)'}}>{rig.game_active}</span>}
+            </div>
+            <div className="lin-rig-health-grid">
+              <div className="lin-rig-metric">
+                <div className="lin-rig-metric-label">CPU Temperature</div>
+                <div className={'lin-rig-metric-value '+rigTempColor(rig.cpu_temp,75,90)}>{rig.cpu_temp!=null?rig.cpu_temp+'°C':'—'}</div>
+                {rig.cpu_temp!=null&&<div className="lin-rig-metric-sub">{rig.cpu_temp<75?'Normal':rig.cpu_temp<90?'Warm':'Hot'}</div>}
+              </div>
+              <div className="lin-rig-metric">
+                <div className="lin-rig-metric-label">GPU Temperature</div>
+                <div className={'lin-rig-metric-value '+rigTempColor(rig.gpu_temp,80,95)}>{rig.gpu_temp!=null?rig.gpu_temp+'°C':'—'}</div>
+                {rig.gpu_temp!=null&&<div className="lin-rig-metric-sub">{rig.gpu_temp<80?'Normal':rig.gpu_temp<95?'Warm':'Hot'}</div>}
+              </div>
+              <div className="lin-rig-metric">
+                <div className="lin-rig-metric-label">RAM Usage</div>
+                <div className={'lin-rig-metric-value '+rigTempColor(rig.ram_usage,80,92)}>{rig.ram_usage!=null?rig.ram_usage+'%':'—'}</div>
+                {rig.ram_usage!=null&&<div className="lin-rig-metric-sub">{rig.ram_usage<80?'Normal':rig.ram_usage<92?'High':'Critical'}</div>}
+              </div>
+              <div className="lin-rig-metric">
+                <div className="lin-rig-metric-label">Frame Rate</div>
+                <div className={'lin-rig-metric-value '+(rig.fps!=null?(rig.fps<30?'crit':rig.fps<60?'warn':'ok'):'idle')}>{rig.fps!=null?rig.fps+' fps':'—'}</div>
+                <div className="lin-rig-metric-sub">{rig.game_active?rig.game_active:'No game running'}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Software updates */}
+          {updates.length>0&&(
+            <div className="lin-rig-section">
+              <div className="lin-rig-section-head"><span className="lin-rig-section-title">Software updates available</span></div>
+              {updates.map((u,i)=>(
+                <div key={i} className="lin-update-alert">
+                  <svg className="lin-update-icon" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 3a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 8 4zm0 7.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></svg>
+                  <span><strong>{typeof u==='string'?u:u.app||u.name}</strong>{u.installed_version&&u.latest_version?` — v${u.installed_version} → v${u.latest_version}`:''}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* USB devices */}
+          {usb.length>0&&(
+            <div className="lin-rig-section">
+              <div className="lin-rig-section-head"><span className="lin-rig-section-title">Connected USB devices</span><span style={{fontSize:11,color:'rgba(255,252,246,0.40)'}}>{usb.length} device{usb.length!==1?'s':''}</span></div>
+              <div style={{display:'flex',flexWrap:'wrap',gap:4}}>
+                {usb.map((d,i)=><span key={i} className="lin-usb-badge">{typeof d==='string'?d:d.name||d.device_name||JSON.stringify(d)}</span>)}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Personal bests */}
+      {pbs.length>0&&(
+        <div className="lin-rig-section">
+          <div className="lin-rig-section-head"><span className="lin-rig-section-title">Personal best lap times</span><span style={{fontSize:11,color:'rgba(255,252,246,0.40)'}}>{pbs.length} PB{pbs.length!==1?'s':''}</span></div>
+          <div>
+            {pbs.map((l,i)=>(
+              <div key={l.id||i} className="lin-lap-row">
+                <span className="lin-lap-time">{l.lap_time_formatted||l.lap_time_ms+'ms'}</span>
+                <span className="lin-lap-track">{l.track||'—'}{l.car&&<span className="lin-lap-car"> · {l.car}</span>}</span>
+                {l.game&&<Pill tone="ghost">{l.game}</Pill>}
+                <span className="lin-lap-pb">PB</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Recent laps */}
+      {laps.length>0&&(
+        <div className="lin-rig-section">
+          <div className="lin-rig-section-head"><span className="lin-rig-section-title">Recent laps</span><span style={{fontSize:11,color:'rgba(255,252,246,0.40)'}}>{laps.length} recorded</span></div>
+          <div>
+            {laps.slice(0,12).map((l,i)=>(
+              <div key={l.id||i} className="lin-lap-row">
+                <span className="lin-lap-time">{l.lap_time_formatted||l.lap_time_ms+'ms'}</span>
+                <span className="lin-lap-track">{l.track||'—'}{l.car&&<span className="lin-lap-car"> · {l.car}</span>}</span>
+                {l.game&&<Pill tone="ghost">{l.game}</Pill>}
+                {l.is_personal_best&&<span className="lin-lap-pb">PB</span>}
+                <span style={{fontSize:10,color:'rgba(255,252,246,0.30)',marginLeft:'auto',fontFamily:'var(--font-mono)'}}>{fmtDate(l.recorded_at)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Download link */}
+      <div style={{marginTop:32,padding:16,background:'rgba(255,255,255,0.015)',border:'1px solid rgba(255,255,255,0.06)',borderRadius:10}}>
+        <div style={{fontSize:13,fontWeight:600,marginBottom:4}}>Podium 1 Rig Agent</div>
+        <div style={{fontSize:12,color:'rgba(255,252,246,0.50)',marginBottom:12}}>Install the agent on your simulator PC to enable live telemetry, lap time tracking, and USB diagnostics.</div>
+        <a href="https://github.com/podium1racing/p1-support-portal/tree/main/agent" target="_blank" rel="noopener noreferrer"
+          style={{display:'inline-flex',alignItems:'center',gap:6,padding:'7px 14px',background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.10)',borderRadius:7,color:'rgba(255,252,246,0.86)',textDecoration:'none',fontSize:12,fontWeight:500}}>
+          <Ico.Dl width="12" height="12"/> Download installer
+        </a>
+      </div>
+    </div>
+  );
+}
+
 // ── APP ────────────────────────────────────────────────────────────────────
 function App(){
   const[user,setUser]=useState(null);
@@ -930,7 +1120,7 @@ function App(){
     const h=e=>{
       if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.tagName==='SELECT')return;
       if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();setShowSearch(true);return;}
-      const map={h:'home',b:'kb',t:'ticket',r:'rufus',n:'news'};
+      const map={h:'home',b:'kb',t:'ticket',r:'rufus',n:'news',g:'rig'};
       if(map[e.key.toLowerCase()])setTab(map[e.key.toLowerCase()]);
     };
     window.addEventListener('keydown',h);return()=>window.removeEventListener('keydown',h);
@@ -947,6 +1137,7 @@ function App(){
         {tab==='ticket' &&<div style={{flex:1,overflowY:'auto',background:'#0a0a0c',height:'100%'}}><TicketPage user={user}/></div>}
         {tab==='rufus'  &&<RufusPage user={user}/>}
         {tab==='news'   &&<div style={{flex:1,overflowY:'auto',background:'#0a0a0c',height:'100%'}}><NewsPage/></div>}
+        {tab==='rig'    &&<div style={{flex:1,overflowY:'auto',background:'#0a0a0c',height:'100%'}}><RigPage user={user}/></div>}
       </div>
     </div>
   );
