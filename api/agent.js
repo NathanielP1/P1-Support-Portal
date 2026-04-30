@@ -63,12 +63,12 @@ export default async function handler(req, res) {
         return res.status(201).json({ config: Array.isArray(data) ? data[0] : data });
       }
 
-      // POST {type:'telemetry', customer_email, cpu_temp, gpu_temp, ram_usage,
-      //        fps, game_active, usb_devices, software_updates, usb_events}
+      // POST {type:'telemetry', customer_email, gpu_temp, ram_usage,
+      //        fps, game_active, usb_devices, software_updates, usb_events, game_telemetry}
       if (type === 'telemetry') {
         const {
-          customer_email, cpu_temp, gpu_temp, ram_usage, fps,
-          game_active, usb_devices, software_updates, usb_events,
+          customer_email, gpu_temp, ram_usage, fps,
+          game_active, usb_devices, software_updates, usb_events, game_telemetry,
         } = body;
         if (!customer_email) return res.status(400).json({ error: 'customer_email required' });
 
@@ -79,13 +79,13 @@ export default async function handler(req, res) {
         );
         const telRow = {
           customer_email,
-          cpu_temp: cpu_temp ?? null,
           gpu_temp: gpu_temp ?? null,
           ram_usage: ram_usage ?? null,
           fps: fps ?? null,
           game_active: game_active ?? null,
           usb_devices: usb_devices ? JSON.stringify(usb_devices) : null,
           software_updates: software_updates ? JSON.stringify(software_updates) : null,
+          game_telemetry: game_telemetry ? JSON.stringify(game_telemetry) : null,
           last_seen: new Date().toISOString(),
         };
         const tr = await fetch(`${sbUrl}/rest/v1/rig_telemetry`, {

@@ -23,7 +23,7 @@ import requests
 from config import BASE_URL, DEFAULT_INTERVAL, LOCAL_CONFIG_PATH, CONFIG_REFRESH_INTERVAL
 from notifications import notify_announcement, notify_personal_best, notify_software_update
 
-from collectors.system import get_cpu_temp, get_gpu_temp, get_ram_usage, get_active_game
+from collectors.system import get_gpu_temp, get_ram_usage, get_active_game
 from collectors.usb import get_usb_devices
 from collectors.iracing import get_iracing_data, shutdown as iracing_shutdown
 from collectors.simhub import get_simhub_data
@@ -110,7 +110,6 @@ def collect_and_send(local_cfg: dict, remote_config: dict) -> None:
     cfg = remote_config or {}
 
     # ── System metrics ────────────────────────────────────────────────────────
-    cpu_temp = get_cpu_temp()        if cfg.get("collect_cpu_temp", True)  else None
     gpu_temp = get_gpu_temp()        if cfg.get("collect_gpu_temp", True)  else None
     ram_usage = get_ram_usage()      if cfg.get("collect_ram", True)       else None
     game_active = get_active_game()
@@ -125,6 +124,7 @@ def collect_and_send(local_cfg: dict, remote_config: dict) -> None:
 
     # ── Sim telemetry (iRacing has priority; SimHub handles everything else) ──
     fps = None
+    game_telemetry = None
     completed_laps: list[dict] = []
 
     if cfg.get("collect_iracing", True):
@@ -133,6 +133,7 @@ def collect_and_send(local_cfg: dict, remote_config: dict) -> None:
             if ir_tel:
                 game_active = ir_tel.get("game_active", game_active)
                 fps = ir_tel.get("fps")
+                game_telemetry = ir_tel.get("game_telemetry")
             completed_laps.extend(ir_laps)
         except Exception as e:
             log.debug(f"iRacing collector error: {e}")
@@ -143,6 +144,7 @@ def collect_and_send(local_cfg: dict, remote_config: dict) -> None:
             if sh_tel:
                 game_active = sh_tel.get("game_active", game_active)
                 fps = sh_tel.get("fps")
+                game_telemetry = sh_tel.get("game_telemetry")
             completed_laps.extend(sh_laps)
         except Exception as e:
             log.debug(f"SimHub collector error: {e}")
@@ -163,7 +165,6 @@ def collect_and_send(local_cfg: dict, remote_config: dict) -> None:
         "customer_name": local_cfg.get("customer_name", ""),
         "rig": local_cfg.get("rig", ""),
         "agent_version": cfg.get("version", "1.0.0"),
-        "cpu_temp": cpu_temp,
         "gpu_temp": gpu_temp,
         "ram_usage": ram_usage,
         "fps": fps,
@@ -171,6 +172,7 @@ def collect_and_send(local_cfg: dict, remote_config: dict) -> None:
         "usb_devices": usb_devices,
         "software_updates": software_updates,
         "usb_events": usb_events,
+        "game_telemetry": game_telemetry,
     }
     try:
         r = requests.post(

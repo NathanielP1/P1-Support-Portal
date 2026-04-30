@@ -5,7 +5,7 @@ Podium 1 Racing — Rig Agent Configuration
 BASE_URL = "https://p1-support-portal.vercel.app"
 
 # How often to send telemetry (seconds). Overridden by remote config.
-DEFAULT_INTERVAL = 5
+DEFAULT_INTERVAL = 1
 
 # Local config file created by the installer (stores customer_email, customer_name, rig_name)
 LOCAL_CONFIG_PATH = "agent_local.json"

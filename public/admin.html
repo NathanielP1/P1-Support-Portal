@@ -238,21 +238,34 @@ button,input,textarea,select{font-family:inherit;color:inherit}
 /* RIG / AGENT CONFIG */
 .st-rig-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px}
 /* LIVE RIG CARDS */
-.st-rig-grid-all{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-bottom:24px}
-.st-rig-live-card{background:rgba(255,255,255,0.015);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:16px}
+.st-rig-grid-all{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;margin-bottom:24px}
+.st-rig-live-card{background:#0d0d10;border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:16px;cursor:pointer;transition:border-color .15s ease}
+.st-rig-live-card:hover,.st-rig-live-card.expanded{border-color:rgba(255,255,255,0.12)}
 .st-rig-live-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:8px}
 .st-rig-live-name{font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.st-rig-live-game{font-size:11px;font-family:var(--font-mono);color:rgba(255,252,246,0.50);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;text-align:right}
-.st-rig-metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
-.st-metric{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:7px;padding:8px 10px}
-.st-metric-label{font-size:10px;color:rgba(255,252,246,0.40);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px}
-.st-metric-value{font-size:18px;font-family:var(--font-display);line-height:1.1}
-.st-metric-value.warn{color:#f59e0b}.st-metric-value.crit{color:#f8505f}.st-metric-value.ok{color:#22c55e}
-.st-rig-usb{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
-.st-usb-badge{display:inline-flex;padding:3px 8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:5px;font-size:10px;color:rgba(255,252,246,0.70)}
-.st-update-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.20);border-radius:5px;font-size:11px;color:#f59e0b}
-.st-rig-last-seen{font-size:10px;color:rgba(255,252,246,0.30);margin-top:6px}
+.st-rig-live-game{font-size:10px;padding:2px 7px;background:rgba(204,17,34,0.10);border:1px solid rgba(204,17,34,0.20);border-radius:4px;color:#f8505f;white-space:nowrap;flex-shrink:0}
+.st-rig-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.st-metric{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:7px;padding:8px 10px;position:relative;overflow:hidden}
+.st-metric-bar{position:absolute;bottom:0;left:0;right:0;height:2px}
+.st-metric-label{font-size:9px;color:rgba(255,252,246,0.40);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px}
+.st-metric-value{font-size:16px;font-family:var(--font-display);line-height:1}
+.st-metric.ok .st-metric-bar{background:#22c55e}.st-metric.ok .st-metric-value{color:#22c55e}
+.st-metric.warn .st-metric-bar{background:#f59e0b}.st-metric.warn .st-metric-value{color:#f59e0b}
+.st-metric.crit .st-metric-bar{background:#f8505f}.st-metric.crit .st-metric-value{color:#f8505f}
+.st-metric.idle .st-metric-value{color:rgba(255,252,246,0.35)}
+.st-rig-footer{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.st-usb-badge{display:inline-flex;padding:2px 7px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:4px;font-size:10px;color:rgba(255,252,246,0.60)}
+.st-update-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.20);border-radius:4px;font-size:10px;color:#f59e0b}
+.st-rig-last-seen{font-size:10px;color:rgba(255,252,246,0.25);margin-left:auto}
 .st-lap-pb{display:inline-flex;padding:1px 6px;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.25);border-radius:4px;font-size:10px;color:#f59e0b;font-weight:600;margin-left:4px}
+/* Expanded rig detail */
+.st-rig-detail{border-top:1px solid rgba(255,255,255,0.06);margin-top:12px;padding-top:12px}
+.st-rig-detail-title{font-size:10px;font-weight:600;color:rgba(255,252,246,0.40);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px}
+.st-usb-detail-row{display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.03);font-size:11px}
+.st-usb-detail-row:last-child{border-bottom:none}
+.st-usb-detail-dot{width:5px;height:5px;border-radius:50%;background:#22c55e;flex-shrink:0}
+.st-usb-detail-name{flex:1;color:rgba(255,252,246,0.80)}
+.st-usb-detail-vid{font-family:var(--font-mono);font-size:10px;color:rgba(255,252,246,0.25)}
 .st-config-card{padding:16px 18px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:10px}
 .st-config-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .st-config-card-title{font-size:13px;font-weight:600;color:#fff}
@@ -1483,8 +1496,8 @@ function Analytics(){
 }
 
 // ── RIG DASHBOARD ─────────────────────────────────────────────────────────
-function tempColor(val,warn,crit){
-  if(val==null)return '';
+function stMetricClass(val,warn,crit){
+  if(val==null)return 'idle';
   if(val>=crit)return 'crit';
   if(val>=warn)return 'warn';
   return 'ok';
@@ -1497,12 +1510,22 @@ function fmtLastSeen(iso){
   if(diff<3600)return Math.floor(diff/60)+'m ago';
   return Math.floor(diff/3600)+'h ago';
 }
+function StMetric({label,value,unit,cls}){
+  return(
+    <div className={'st-metric '+(cls||'idle')}>
+      <div className="st-metric-label">{label}</div>
+      <div className="st-metric-value">{value!=null?value+unit:'—'}</div>
+      <div className="st-metric-bar"/>
+    </div>
+  );
+}
 function RigCard({rig}){
+  const[expanded,setExpanded]=useState(false);
   const usb=React.useMemo(()=>{try{return JSON.parse(rig.usb_devices||'[]')}catch{return[]}},[rig.usb_devices]);
   const updates=React.useMemo(()=>{try{return JSON.parse(rig.software_updates||'[]')}catch{return[]}},[rig.software_updates]);
-  const isOnline=rig.last_seen&&(Date.now()-new Date(rig.last_seen).getTime())<30000;
+  const isOnline=rig.last_seen&&(Date.now()-new Date(rig.last_seen).getTime())<10000;
   return(
-    <div className="st-rig-live-card">
+    <div className={'st-rig-live-card'+(expanded?' expanded':'')} onClick={()=>setExpanded(e=>!e)}>
       <div className="st-rig-live-head">
         <div style={{display:'flex',alignItems:'center',gap:7,minWidth:0}}>
           <span className={'st-dot'+(isOnline?' st-dot-green':'')} style={isOnline?{}:{background:'rgba(255,255,255,0.15)'}}/>
@@ -1511,14 +1534,32 @@ function RigCard({rig}){
         {rig.game_active&&<span className="st-rig-live-game">{rig.game_active}</span>}
       </div>
       <div className="st-rig-metrics">
-        <div className="st-metric"><div className="st-metric-label">CPU Temp</div><div className={'st-metric-value '+tempColor(rig.cpu_temp,75,90)}>{rig.cpu_temp!=null?rig.cpu_temp+'°C':'—'}</div></div>
-        <div className="st-metric"><div className="st-metric-label">GPU Temp</div><div className={'st-metric-value '+tempColor(rig.gpu_temp,80,95)}>{rig.gpu_temp!=null?rig.gpu_temp+'°C':'—'}</div></div>
-        <div className="st-metric"><div className="st-metric-label">RAM</div><div className={'st-metric-value '+tempColor(rig.ram_usage,80,92)}>{rig.ram_usage!=null?rig.ram_usage+'%':'—'}</div></div>
-        <div className="st-metric"><div className="st-metric-label">FPS</div><div className={'st-metric-value '+(rig.fps!=null?(rig.fps<30?'crit':rig.fps<60?'warn':'ok'):'')}>{rig.fps!=null?rig.fps:'—'}</div></div>
+        <StMetric label="GPU" value={rig.gpu_temp} unit="°C" cls={stMetricClass(rig.gpu_temp,75,85)}/>
+        <StMetric label="RAM" value={rig.ram_usage} unit="%" cls={stMetricClass(rig.ram_usage,70,85)}/>
+        <StMetric label="FPS" value={rig.fps} unit="" cls={rig.fps==null?'idle':rig.fps<30?'crit':rig.fps<60?'warn':'ok'}/>
       </div>
-      {usb.length>0&&<div className="st-rig-usb">{usb.slice(0,4).map((d,i)=><span key={i} className="st-usb-badge">{typeof d==='string'?d:d.name||d.device_name||JSON.stringify(d)}</span>)}{usb.length>4&&<span className="st-usb-badge">+{usb.length-4} more</span>}</div>}
-      {updates.length>0&&<div style={{display:'flex',flexWrap:'wrap',gap:4,marginBottom:6}}>{updates.map((u,i)=><span key={i} className="st-update-badge"><svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 3a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 8 4zm0 7.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></svg>{typeof u==='string'?u:u.app||u.name||JSON.stringify(u)} update</span>)}</div>}
-      <div className="st-rig-last-seen">Last seen: {fmtLastSeen(rig.last_seen)}</div>
+      <div className="st-rig-footer">
+        {usb.length>0&&<span className="st-usb-badge">{usb.length} USB</span>}
+        {updates.map((u,i)=><span key={i} className="st-update-badge"><svg width="9" height="9" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 3a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 8 4zm0 7.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></svg>{typeof u==='string'?u:u.app||u.name}</span>)}
+        <span className="st-rig-last-seen">{fmtLastSeen(rig.last_seen)}</span>
+      </div>
+      {expanded&&usb.length>0&&(
+        <div className="st-rig-detail">
+          <div className="st-rig-detail-title">USB Devices ({usb.length})</div>
+          {usb.map((d,i)=>{
+            const name=typeof d==='string'?d:d.name||d.device_name||'USB Device';
+            const vid=typeof d==='object'?d.vid:'';
+            const pid=typeof d==='object'?d.pid:'';
+            return(
+              <div key={i} className="st-usb-detail-row">
+                <span className="st-usb-detail-dot"/>
+                <span className="st-usb-detail-name">{name}</span>
+                {(vid||pid)&&<span className="st-usb-detail-vid">{vid}{pid?':'+pid:''}</span>}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

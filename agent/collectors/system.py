@@ -1,5 +1,6 @@
 """
-System telemetry collector — CPU temp, GPU temp, RAM usage, FPS, active game.
+System telemetry collector — GPU temp, RAM usage, FPS, active game.
+CPU temperature removed: unreliable on Windows without third-party drivers.
 All Windows-specific imports are wrapped in try/except for graceful fallback.
 """
 
@@ -8,53 +9,15 @@ import psutil
 
 try:
     import wmi as wmi_module
-    _wmi = wmi_module.WMI()
     _wmi_hw = None
     try:
         _wmi_hw = wmi_module.WMI(namespace=r"root\OpenHardwareMonitor")
     except Exception:
         pass
 except Exception:
-    _wmi = None
     _wmi_hw = None
 
 from config import KNOWN_SIM_PROCESSES
-
-
-def get_cpu_temp() -> float | None:
-    """Return CPU temperature in Celsius, or None if unavailable."""
-    # Try WMI MSAcpi_ThermalZoneTemperature (works on most OEM boards)
-    if _wmi:
-        try:
-            wmi_t = wmi_module.WMI(namespace=r"root\wmi")
-            for zone in wmi_t.MSAcpi_ThermalZoneTemperature():
-                kelvin = zone.CurrentTemperature / 10.0
-                celsius = kelvin - 273.15
-                if 0 < celsius < 120:
-                    return round(celsius, 1)
-        except Exception:
-            pass
-
-    # Try Open Hardware Monitor WMI namespace
-    if _wmi_hw:
-        try:
-            for sensor in _wmi_hw.Sensor():
-                if sensor.SensorType == "Temperature" and "cpu" in sensor.Name.lower():
-                    return round(float(sensor.Value), 1)
-        except Exception:
-            pass
-
-    # Fallback: psutil (Linux/macOS only, returns None on Windows without drivers)
-    try:
-        temps = psutil.sensors_temperatures()
-        if temps:
-            for key in ("coretemp", "k10temp", "cpu_thermal"):
-                if key in temps and temps[key]:
-                    return round(temps[key][0].current, 1)
-    except (AttributeError, Exception):
-        pass
-
-    return None
 
 
 def get_gpu_temp() -> float | None:
@@ -72,7 +35,7 @@ def get_gpu_temp() -> float | None:
     except Exception:
         pass
 
-    # Open Hardware Monitor
+    # Open Hardware Monitor WMI namespace (AMD / Intel via OHM)
     if _wmi_hw:
         try:
             for sensor in _wmi_hw.Sensor():
