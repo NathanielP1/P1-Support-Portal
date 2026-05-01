@@ -235,44 +235,6 @@ button,input,textarea,select{font-family:inherit;color:inherit}
 .st-cat-fill{height:100%;border-radius:3px}
 .st-cat-fill-red{background:#CC1122}.st-cat-fill-amber{background:#f59e0b}.st-cat-fill-blue{background:#60a5fa}.st-cat-fill-green{background:#22c55e}.st-cat-fill-violet{background:#a855f7}.st-cat-fill-ghost{background:rgba(255,255,255,0.30)}
 .st-cat-n{color:rgba(255,252,246,0.62);text-align:right;font-family:var(--font-mono)}
-/* RIG / AGENT CONFIG */
-.st-rig-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px}
-/* LIVE RIG CARDS */
-.st-rig-grid-all{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;margin-bottom:24px}
-.st-rig-live-card{background:#0d0d10;border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:16px;cursor:pointer;transition:border-color .15s ease}
-.st-rig-live-card:hover,.st-rig-live-card.expanded{border-color:rgba(255,255,255,0.12)}
-.st-rig-live-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:8px}
-.st-rig-live-name{font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.st-rig-live-game{font-size:10px;padding:2px 7px;background:rgba(204,17,34,0.10);border:1px solid rgba(204,17,34,0.20);border-radius:4px;color:#f8505f;white-space:nowrap;flex-shrink:0}
-.st-rig-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
-.st-metric{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:7px;padding:8px 10px;position:relative;overflow:hidden}
-.st-metric-bar{position:absolute;bottom:0;left:0;right:0;height:2px}
-.st-metric-label{font-size:9px;color:rgba(255,252,246,0.40);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px}
-.st-metric-value{font-size:16px;font-family:var(--font-display);line-height:1}
-.st-metric.ok .st-metric-bar{background:#22c55e}.st-metric.ok .st-metric-value{color:#22c55e}
-.st-metric.warn .st-metric-bar{background:#f59e0b}.st-metric.warn .st-metric-value{color:#f59e0b}
-.st-metric.crit .st-metric-bar{background:#f8505f}.st-metric.crit .st-metric-value{color:#f8505f}
-.st-metric.idle .st-metric-value{color:rgba(255,252,246,0.35)}
-.st-rig-footer{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.st-usb-badge{display:inline-flex;padding:2px 7px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:4px;font-size:10px;color:rgba(255,252,246,0.60)}
-.st-update-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.20);border-radius:4px;font-size:10px;color:#f59e0b}
-.st-rig-last-seen{font-size:10px;color:rgba(255,252,246,0.25);margin-left:auto}
-.st-lap-pb{display:inline-flex;padding:1px 6px;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.25);border-radius:4px;font-size:10px;color:#f59e0b;font-weight:600;margin-left:4px}
-/* Expanded rig detail */
-.st-rig-detail{border-top:1px solid rgba(255,255,255,0.06);margin-top:12px;padding-top:12px}
-.st-rig-detail-title{font-size:10px;font-weight:600;color:rgba(255,252,246,0.40);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px}
-.st-usb-detail-row{display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.03);font-size:11px}
-.st-usb-detail-row:last-child{border-bottom:none}
-.st-usb-detail-dot{width:5px;height:5px;border-radius:50%;background:#22c55e;flex-shrink:0}
-.st-usb-detail-name{flex:1;color:rgba(255,252,246,0.80)}
-.st-usb-detail-vid{font-family:var(--font-mono);font-size:10px;color:rgba(255,252,246,0.25)}
-.st-config-card{padding:16px 18px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:10px}
-.st-config-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.st-config-card-title{font-size:13px;font-weight:600;color:#fff}
-.st-config-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
-.st-config-row:last-child{border-bottom:none}
-.st-config-key{color:rgba(255,252,246,0.50)}
-.st-config-val{color:#fff;font-weight:500;display:flex;align-items:center;gap:5px}
 /* MODAL */
 .st-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;display:flex;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(8px);animation:fadeIn .15s ease both}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
@@ -358,8 +320,7 @@ button,input,textarea,select{font-family:inherit;color:inherit}
   .st-kb-grid{grid-template-columns:repeat(2,1fr)}
   .st-lookup-grid{grid-template-columns:1fr}
   .st-stat-grid{grid-template-columns:repeat(2,1fr)}
-  .st-rig-grid{grid-template-columns:1fr}
-  .st-rig-grid-all{grid-template-columns:1fr}
+
 }
 </style>
 </head>
@@ -384,7 +345,7 @@ const I={
   Chart:  p=><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" {...p}><rect x="2" y="9" width="3" height="5"/><rect x="6.5" y="6" width="3" height="8"/><rect x="11" y="3" width="3" height="11"/></svg>,
   Spark:  p=><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" {...p}><path d="M8 1v4M8 11v4M1 8h4M11 8h4M3.5 3.5l2 2M10.5 10.5l2 2M3.5 12.5l2-2M10.5 5.5l2-2"/></svg>,
   Staff:  p=><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" {...p}><path d="M2 14c0-2.21 1.79-4 4-4h4c2.21 0 4 1.79 4 4"/><circle cx="8" cy="5" r="3"/><line x1="11" y1="1" x2="11" y2="4"/><circle cx="13" cy="4.5" r="1" fill="currentColor" stroke="none"/></svg>,
-  Rig:    p=><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" {...p}><rect x="2" y="4" width="12" height="8" rx="1.5"/><line x1="5" y1="4" x2="5" y2="12"/><line x1="8" y1="4" x2="8" y2="12"/><line x1="11" y1="4" x2="11" y2="12"/><line x1="2" y1="8" x2="14" y2="8"/></svg>,
+
   Search: p=><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" {...p}><circle cx="6.5" cy="6.5" r="4"/><line x1="10" y1="10" x2="14" y2="14"/></svg>,
   ChevR:  p=><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" {...p}><polyline points="6,4 10,8 6,12"/></svg>,
   ChevD:  p=><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" {...p}><polyline points="4,6 8,10 12,6"/></svg>,
@@ -463,7 +424,7 @@ function Sidebar({tab,setTab,me,collapsed,setCollapsed,openCount,onOpenSearch,on
     {k:'kb',        l:'KB Manager',       i:I.Book,  kbd:'B'},
     {k:'snippets',  l:'Train RUFUS',      i:I.Spark, kbd:'T'},
     {k:'analytics', l:'Analytics',        i:I.Chart, kbd:'A'},
-    {k:'rig',       l:'Rig Dashboard',    i:I.Rig,   kbd:'G'},
+
     ...(me.role==='admin'?[{k:'staff', l:'Staff', i:I.Staff, kbd:'S'}]:[]),
   ];
   const go=k=>{setTab(k);if(window.innerWidth<=768)setCollapsed(true);else if(collapsed)setCollapsed(false)};
@@ -692,8 +653,7 @@ function CustomerLookup({me}){
   const[showAddCust,setShowAddCust]=useState(false);
   const[addForm,setAddForm]=useState({name:'',email:'',rig:'',city:'',purchase_date:'',motion_platform:'',wheelbase:'',specialist_name:'',specialist_email:''});
   const[addSaving,setAddSaving]=useState(false);
-  const[laps,setLaps]=useState([]);
-  const[lapsLoading,setLapsLoading]=useState(false);
+
   const[csvRows,setCsvRows]=useState([]);
   const[showCSV,setShowCSV]=useState(false);
   const[importing,setImporting]=useState(false);
@@ -706,12 +666,6 @@ function CustomerLookup({me}){
     setLoading(false);
   },[]);
 
-  useEffect(()=>{
-    if(!active?.email)return;
-    setLapsLoading(true);
-    fetch('/api/agent?view=laps&customer_email='+encodeURIComponent(active.email))
-      .then(r=>r.json()).then(d=>setLaps(d.laps||[])).catch(()=>setLaps([])).finally(()=>setLapsLoading(false));
-  },[active?.email]);
 
   const matches=q?customers.filter(c=>c.name?.toLowerCase().includes(q.toLowerCase())||c.email?.toLowerCase().includes(q.toLowerCase())||c.rig?.toLowerCase().includes(q.toLowerCase())):customers;
   const custTickets=active?tickets.filter(t=>t.email&&active.email&&t.email.toLowerCase()===active.email.toLowerCase()):[];
@@ -816,25 +770,6 @@ function CustomerLookup({me}){
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
-              {(lapsLoading||laps.length>0)&&(
-                <div className="st-customer-section">
-                  <div className="st-customer-section-head"><h3>Lap times</h3><span style={{fontSize:11,color:'rgba(255,252,246,0.40)'}}>{laps.length} recorded</span></div>
-                  {lapsLoading&&<div style={{padding:'8px 0',color:'rgba(255,252,246,0.40)',fontSize:12}}><Spin/> Loading…</div>}
-                  {!lapsLoading&&(
-                    <div className="st-mini-table">
-                      {laps.slice(0,10).map((l,i)=>(
-                        <div key={l.id||i} className="st-mini-row">
-                          <span className="st-row-id mono">{l.lap_time_formatted||l.lap_time_ms+'ms'}</span>
-                          <span className="st-mini-text">{l.track||'—'}{l.car?<span style={{color:'rgba(255,252,246,0.40)',marginLeft:6}}>{l.car}</span>:null}</span>
-                          {l.game&&<Pill tone="ghost">{l.game}</Pill>}
-                          {l.is_personal_best&&<span className="st-lap-pb">PB</span>}
-                          <span className="st-mini-date mono">{l.recorded_at?fmtDate(l.recorded_at):''}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
               )}
             </div>
@@ -1495,161 +1430,6 @@ function Analytics(){
   );
 }
 
-// ── RIG DASHBOARD ─────────────────────────────────────────────────────────
-function stMetricClass(val,warn,crit){
-  if(val==null)return 'idle';
-  if(val>=crit)return 'crit';
-  if(val>=warn)return 'warn';
-  return 'ok';
-}
-function fmtLastSeen(iso){
-  if(!iso)return 'never';
-  const diff=Math.floor((Date.now()-new Date(iso).getTime())/1000);
-  if(diff<0)return 'just now';
-  if(diff<60)return diff+'s ago';
-  if(diff<3600)return Math.floor(diff/60)+'m ago';
-  return Math.floor(diff/3600)+'h ago';
-}
-function StMetric({label,value,unit,cls}){
-  return(
-    <div className={'st-metric '+(cls||'idle')}>
-      <div className="st-metric-label">{label}</div>
-      <div className="st-metric-value">{value!=null?value+unit:'—'}</div>
-      <div className="st-metric-bar"/>
-    </div>
-  );
-}
-function RigCard({rig}){
-  const[expanded,setExpanded]=useState(false);
-  const usb=React.useMemo(()=>{try{return JSON.parse(rig.usb_devices||'[]')}catch{return[]}},[rig.usb_devices]);
-  const updates=React.useMemo(()=>{try{return JSON.parse(rig.software_updates||'[]')}catch{return[]}},[rig.software_updates]);
-  const isOnline=rig.last_seen&&(Date.now()-new Date(rig.last_seen).getTime())<10000;
-  return(
-    <div className={'st-rig-live-card'+(expanded?' expanded':'')} onClick={()=>setExpanded(e=>!e)}>
-      <div className="st-rig-live-head">
-        <div style={{display:'flex',alignItems:'center',gap:7,minWidth:0}}>
-          <span className={'st-dot'+(isOnline?' st-dot-green':'')} style={isOnline?{}:{background:'rgba(255,255,255,0.15)'}}/>
-          <span className="st-rig-live-name">{rig.customer_email}</span>
-        </div>
-        {rig.game_active&&<span className="st-rig-live-game">{rig.game_active}</span>}
-      </div>
-      <div className="st-rig-metrics">
-        <StMetric label="GPU" value={rig.gpu_temp} unit="°C" cls={stMetricClass(rig.gpu_temp,75,85)}/>
-        <StMetric label="RAM" value={rig.ram_usage} unit="%" cls={stMetricClass(rig.ram_usage,70,85)}/>
-        <StMetric label="FPS" value={rig.fps} unit="" cls={rig.fps==null?'idle':rig.fps<30?'crit':rig.fps<60?'warn':'ok'}/>
-      </div>
-      <div className="st-rig-footer">
-        {usb.length>0&&<span className="st-usb-badge">{usb.length} USB</span>}
-        {updates.map((u,i)=><span key={i} className="st-update-badge"><svg width="9" height="9" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 3a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 8 4zm0 7.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></svg>{typeof u==='string'?u:u.app||u.name}</span>)}
-        <span className="st-rig-last-seen">{fmtLastSeen(rig.last_seen)}</span>
-      </div>
-      {expanded&&usb.length>0&&(
-        <div className="st-rig-detail">
-          <div className="st-rig-detail-title">USB Devices ({usb.length})</div>
-          {usb.map((d,i)=>{
-            const name=typeof d==='string'?d:d.name||d.device_name||'USB Device';
-            const vid=typeof d==='object'?d.vid:'';
-            const pid=typeof d==='object'?d.pid:'';
-            return(
-              <div key={i} className="st-usb-detail-row">
-                <span className="st-usb-detail-dot"/>
-                <span className="st-usb-detail-name">{name}</span>
-                {(vid||pid)&&<span className="st-usb-detail-vid">{vid}{pid?':'+pid:''}</span>}
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
-function RigDashboard(){
-  const[config,setConfig]=useState(null);
-  const[anns,setAnns]=useState([]);
-  const[rigs,setRigs]=useState([]);
-  const[loading,setLoading]=useState(true);
-  const[rigsLoading,setRigsLoading]=useState(true);
-  const[showAdd,setShowAdd]=useState(false);
-  const[newAnn,setNewAnn]=useState('');
-
-  const loadConfig=()=>fetch('/api/agent').then(r=>r.json()).then(d=>{if(d.config){setConfig(d.config);setAnns(Array.isArray(d.config.announcements)?d.config.announcements:[])}setLoading(false)}).catch(()=>setLoading(false));
-  const loadRigs=()=>fetch('/api/agent?view=telemetry').then(r=>r.json()).then(d=>{setRigs(d.rigs||[]);setRigsLoading(false)}).catch(()=>setRigsLoading(false));
-
-  useEffect(()=>{loadConfig();loadRigs();},[]);
-  useEffect(()=>{const id=setInterval(loadRigs,10000);return()=>clearInterval(id);},[]);
-
-  const saveAnn=async()=>{
-    const next=[...anns,{id:Date.now().toString(),message:newAnn,created:new Date().toISOString()}];
-    await fetch('/api/agent',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'config',announcements:next,version:config?.version||'1.0',updated_at:new Date().toISOString()})});
-    setAnns(next);setShowAdd(false);setNewAnn('');
-  };
-
-  const onlineCount=rigs.filter(r=>r.last_seen&&(Date.now()-new Date(r.last_seen).getTime())<30000).length;
-
-  return(
-    <div className="st-page">
-      <PageHead eyebrow="AGENT · DASHBOARD" title={<>Rig Dashboard <span style={{fontSize:13,fontFamily:'var(--font-mono)',color:'rgba(255,252,246,0.40)',fontWeight:400,letterSpacing:0,background:'rgba(255,255,255,0.04)',padding:'2px 9px',borderRadius:5,border:'1px solid rgba(255,255,255,0.06)'}}>BETA</span></>} sub="Live telemetry from all connected customer rigs. Auto-refreshes every 10 seconds."/>
-      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
-        <div style={{display:'flex',alignItems:'center',gap:10}}>
-          <div style={{fontSize:14,fontWeight:600,color:'rgba(255,252,246,0.86)'}}>Connected rigs</div>
-          {!rigsLoading&&<Pill tone={onlineCount>0?'green':'ghost'} dot>{onlineCount} online · {rigs.length} total</Pill>}
-        </div>
-        <button className="st-btn-ghost st-btn-sm" onClick={loadRigs}><svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor" style={{marginRight:4}}><path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/><path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/></svg>Refresh</button>
-      </div>
-      {rigsLoading&&<div className="st-loading"><Spin/> Loading rigs…</div>}
-      {!rigsLoading&&rigs.length===0&&<div className="st-empty" style={{marginBottom:24}}>No rigs reporting yet. Install the Podium 1 agent on a customer machine to start collecting telemetry.</div>}
-      {!rigsLoading&&rigs.length>0&&<div className="st-rig-grid-all">{rigs.map(r=><RigCard key={r.customer_email} rig={r}/>)}</div>}
-      {loading&&<div className="st-loading"><Spin/> Loading config…</div>}
-      {!loading&&config&&(
-        <>
-          <div style={{fontSize:14,fontWeight:600,color:'rgba(255,252,246,0.86)',marginBottom:10}}>Agent configuration</div>
-          <div className="st-rig-grid" style={{marginBottom:24}}>
-            <div className="st-config-card">
-              <div className="st-config-card-head"><span className="st-config-card-title">Collection</span></div>
-              <div className="st-config-row"><span className="st-config-key">Interval</span><span className="st-config-val">{config.collection_interval_seconds||5}s</span></div>
-              <div className="st-config-row"><span className="st-config-key">CPU temp</span><span className="st-config-val">{config.collect_cpu_temp!==false?<span style={{color:'#22c55e'}}>On</span>:<span style={{color:'#f8505f'}}>Off</span>}</span></div>
-              <div className="st-config-row"><span className="st-config-key">GPU temp</span><span className="st-config-val">{config.collect_gpu_temp!==false?<span style={{color:'#22c55e'}}>On</span>:<span style={{color:'#f8505f'}}>Off</span>}</span></div>
-              <div className="st-config-row"><span className="st-config-key">RAM</span><span className="st-config-val">{config.collect_ram!==false?<span style={{color:'#22c55e'}}>On</span>:<span style={{color:'#f8505f'}}>Off</span>}</span></div>
-              <div className="st-config-row"><span className="st-config-key">FPS</span><span className="st-config-val">{config.collect_fps!==false?<span style={{color:'#22c55e'}}>On</span>:<span style={{color:'#f8505f'}}>Off</span>}</span></div>
-            </div>
-            <div className="st-config-card">
-              <div className="st-config-card-head"><span className="st-config-card-title">Events</span></div>
-              <div className="st-config-row"><span className="st-config-key">USB devices</span><span className="st-config-val">{config.collect_usb_devices!==false?<span style={{color:'#22c55e'}}>On</span>:<span style={{color:'#f8505f'}}>Off</span>}</span></div>
-              <div className="st-config-row"><span className="st-config-key">Event log</span><span className="st-config-val">{config.collect_event_log!==false?<span style={{color:'#22c55e'}}>On</span>:<span style={{color:'#f8505f'}}>Off</span>}</span></div>
-              <div className="st-config-row"><span className="st-config-key">Version</span><span className="st-config-val mono">{config.version||'—'}</span></div>
-            </div>
-          </div>
-        </>
-      )}
-      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
-        <div style={{fontSize:14,fontWeight:600,color:'rgba(255,252,246,0.86)'}}>Customer announcements</div>
-        <button className="st-btn-primary" onClick={()=>setShowAdd(true)}><I.Plus width="13" height="13"/>Add announcement</button>
-      </div>
-      <div className="st-table">
-        <div className="st-table-head st-table-head-conv"><div>Message</div><div>Created</div><div>Status</div><div></div></div>
-        {anns.length===0&&<div className="st-empty">No announcements. Add one to show a banner to all customers.</div>}
-        {anns.map(a=>(
-          <div key={a.id||a} className="st-table-row st-table-row-conv">
-            <div className="st-row-text st-wrap-text">{a.message||a.text||String(a)}</div>
-            <div className="st-row-meta mono">{a.created?fmtDate(a.created):''}</div>
-            <div><Pill tone="green" dot>Active</Pill></div>
-            <div className="st-row-actions"><button className="st-btn-danger st-btn-sm" onClick={async()=>{const next=anns.filter(x=>(x.id||x)!==(a.id||a));setAnns(next);await fetch('/api/agent',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'config',announcements:next,version:config?.version||'1.0',updated_at:new Date().toISOString()})})}}><I.Trash width="12" height="12"/></button></div>
-          </div>
-        ))}
-      </div>
-      {showAdd&&(
-        <div className="st-overlay" onClick={()=>setShowAdd(false)}>
-          <div className="st-modal" onClick={e=>e.stopPropagation()}>
-            <div className="st-modal-head"><span className="st-modal-title">Add announcement</span><button className="st-icon-btn" onClick={()=>setShowAdd(false)}><I.X width="13" height="13"/></button></div>
-            <div className="st-modal-body"><div className="st-form-field"><label className="st-form-label">Message *</label><textarea className="st-input st-textarea" rows={3} value={newAnn} onChange={e=>setNewAnn(e.target.value)} placeholder="This banner will be shown to all customers on their home page…"/></div></div>
-            <div className="st-modal-actions"><button className="st-btn-ghost" onClick={()=>setShowAdd(false)}>Cancel</button><button className="st-btn-primary" onClick={saveAnn} disabled={!newAnn.trim()}>Post announcement</button></div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ── STAFF MANAGEMENT ──────────────────────────────────────────────────────
 function StaffPage(){
   const[staff,setStaff]=useState([]);
@@ -1729,7 +1509,7 @@ function App(){
     const h=e=>{
       if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.tagName==='SELECT')return;
       if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();setShowSearch(true);return;}
-      const map={q:'queue',c:'customers',v:'convs',n:'news',b:'kb',t:'snippets',a:'analytics',g:'rig',s:'staff'};
+      const map={q:'queue',c:'customers',v:'convs',n:'news',b:'kb',t:'snippets',a:'analytics',s:'staff'};
       if(map[e.key.toLowerCase()]){if(map[e.key.toLowerCase()]==='s'&&me.role!=='admin')return;setTab(map[e.key.toLowerCase()]);}
     };
     window.addEventListener('keydown',h);return()=>window.removeEventListener('keydown',h);
@@ -1751,7 +1531,7 @@ function App(){
         {tab==='kb'        &&<KBManager/>}
         {tab==='snippets'  &&<TrainRufus/>}
         {tab==='analytics' &&<Analytics/>}
-        {tab==='rig'       &&<RigDashboard/>}
+
         {tab==='staff'     &&me.role==='admin'&&<StaffPage/>}
       </main>
     </div>
