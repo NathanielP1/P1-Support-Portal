@@ -186,6 +186,21 @@ button,input,textarea,select{font-family:inherit;color:inherit}
 .lin-video-body{padding:16px 18px}
 .lin-video-title{font-size:15px;font-weight:600;color:#fff;margin-bottom:8px}
 .lin-video-notes{font-size:13px;color:rgba(255,252,246,0.62);line-height:1.6;white-space:pre-wrap}
+.lin-video-card{cursor:pointer;transition:border-color .15s,transform .15s}
+.lin-video-card:hover{border-color:rgba(255,255,255,0.18);transform:translateY(-2px)}
+.lin-video-thumb{position:relative;padding-top:56.25%;background:#0a0a0c;overflow:hidden}
+.lin-video-thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.lin-video-play-btn{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.35);transition:background .15s}
+.lin-video-card:hover .lin-video-play-btn{background:rgba(0,0,0,0.18)}
+.lin-video-play-icon{width:48px;height:48px;background:rgba(255,255,255,0.92);border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,0.5);transition:transform .15s,background .15s}
+.lin-video-card:hover .lin-video-play-icon{transform:scale(1.1);background:#fff}
+/* VIDEO LIGHTBOX */
+.lin-vlb-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:300;display:flex;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(14px);animation:fadeIn .15s ease both}
+.lin-vlb-inner{width:100%;max-width:960px;background:#0d0d10;border:1px solid rgba(255,255,255,0.08);border-radius:14px;overflow:hidden;box-shadow:0 40px 100px rgba(0,0,0,0.7);animation:fadeUp .2s cubic-bezier(.4,0,.2,1) both}
+.lin-vlb-head{display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,0.06);gap:12px}
+.lin-vlb-title{font-size:14px;font-weight:600;color:#fff;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lin-vlb-player{position:relative;padding-top:56.25%;background:#000}
+.lin-vlb-player iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
 /* OVERLAY */
 .lin-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;display:flex;align-items:flex-start;justify-content:center;padding:48px 24px;overflow-y:auto;backdrop-filter:blur(8px);animation:fadeIn .15s ease both}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
@@ -640,11 +655,19 @@ function KBPage(){
   const[view,setView]=useState('list');
   const[videos,setVideos]=useState([]);
   const[videosLoading,setVideosLoading]=useState(true);
+  const[activeVideo,setActiveVideo]=useState(null);
 
   useEffect(()=>{
     fetch('/api/kb').then(r=>r.json()).then(d=>{setFiles(d.files||[]);setLoading(false)}).catch(()=>setLoading(false));
     fetch('/api/kb-videos').then(r=>r.json()).then(d=>{setVideos(d.videos||[]);setVideosLoading(false)}).catch(()=>setVideosLoading(false));
   },[]);
+
+  useEffect(()=>{
+    if(!activeVideo)return;
+    const h=e=>{if(e.key==='Escape')setActiveVideo(null)};
+    window.addEventListener('keydown',h);
+    return()=>window.removeEventListener('keydown',h);
+  },[activeVideo]);
 
   const filtered=q?files.filter(f=>f.name.toLowerCase().includes(q.toLowerCase())):files;
   const grouped={};filtered.forEach(f=>{const c=f.category||'General';if(!grouped[c])grouped[c]=[];grouped[c].push(f)});
@@ -656,6 +679,15 @@ function KBPage(){
     if(yt)return `https://www.youtube.com/embed/${yt[1]}?rel=0`;
     const gd=url.match(/\/d\/([^/]+)/);
     if(gd)return `https://drive.google.com/file/d/${gd[1]}/preview`;
+    return null;
+  };
+
+  const getThumb=url=>{
+    if(!url)return null;
+    const yt=url.match(/(?:v=|youtu\.be\/|embed\/)([A-Za-z0-9_-]{11})/);
+    if(yt)return `https://img.youtube.com/vi/${yt[1]}/hqdefault.jpg`;
+    const gd=url.match(/\/d\/([^/]+)/);
+    if(gd)return `https://drive.google.com/thumbnail?id=${gd[1]}&sz=w640`;
     return null;
   };
 
@@ -677,10 +709,18 @@ function KBPage(){
             <div className="lin-video-list">
               {videos.map(v=>{
                 const embed=getEmbed(v.url);
+                const thumb=getThumb(v.url);
                 if(!embed)return null;
                 return(
-                  <div key={v.id} className="lin-video-card">
-                    <div className="lin-video-player"><iframe src={embed} title={v.title} allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowFullScreen/></div>
+                  <div key={v.id} className="lin-video-card" onClick={()=>setActiveVideo(v)}>
+                    <div className="lin-video-thumb">
+                      {thumb&&<img src={thumb} alt={v.title} loading="lazy"/>}
+                      <div className="lin-video-play-btn">
+                        <div className="lin-video-play-icon">
+                          <svg width="16" height="18" viewBox="0 0 16 18" fill="none"><path d="M1 1.5l14 7.5-14 7.5V1.5z" fill="#111" stroke="#111" strokeLinejoin="round"/></svg>
+                        </div>
+                      </div>
+                    </div>
                     <div className="lin-video-body">
                       <div className="lin-video-title">{v.title}</div>
                       {v.notes&&<div className="lin-video-notes">{v.notes}</div>}
@@ -748,6 +788,21 @@ function KBPage(){
           </div>
         </div>
       )}
+      {activeVideo&&(()=>{
+        const embed=getEmbed(activeVideo.url);
+        const src=embed&&embed.includes('youtube.com')?embed+'&autoplay=1':embed;
+        return(
+          <div className="lin-vlb-overlay" onClick={()=>setActiveVideo(null)}>
+            <div className="lin-vlb-inner" onClick={e=>e.stopPropagation()}>
+              <div className="lin-vlb-head">
+                <span className="lin-vlb-title">{activeVideo.title}</span>
+                <button className="lin-icon-btn" onClick={()=>setActiveVideo(null)}><Ico.X width="13" height="13"/></button>
+              </div>
+              {src&&<div className="lin-vlb-player"><iframe key={activeVideo.id} src={src} title={activeVideo.title} allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture;fullscreen" allowFullScreen/></div>}
+            </div>
+          </div>
+        );
+      })()}
     </>
   );
 }
