@@ -179,7 +179,7 @@ button,input,textarea,select{font-family:inherit;color:inherit}
 .lin-kb-card-title{font-size:13px;font-weight:600;color:#fff;line-height:1.35;margin-bottom:6px}
 /* VIDEO */
 .lin-video-section{margin-bottom:32px}
-.lin-video-list{display:flex;flex-direction:column;gap:16px}
+.lin-video-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px}
 .lin-video-card{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:12px;overflow:hidden}
 .lin-video-player{position:relative;padding-top:56.25%;background:#0a0a0c}
 .lin-video-player iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
@@ -650,8 +650,14 @@ function KBPage(){
   const grouped={};filtered.forEach(f=>{const c=f.category||'General';if(!grouped[c])grouped[c]=[];grouped[c].push(f)});
   const accent={'Display':'rgba(96,165,250,0.7)','Motion':'rgba(251,146,60,0.7)','Audio':'rgba(52,211,153,0.7)','Software':'rgba(167,139,250,0.7)','Hardware':'rgba(245,158,11,0.7)'};
 
-  const getThumb=url=>{const id=url?.match(/\/d\/([^/]+)/)?.[1];return id?`https://drive.google.com/thumbnail?id=${id}&sz=w400`:null};
-  const getYTEmbed=url=>{const m=url?.match(/(?:v=|youtu\.be\/|embed\/)([A-Za-z0-9_-]{11})/);return m?`https://www.youtube.com/embed/${m[1]}?rel=0`:null};
+  const getEmbed=url=>{
+    if(!url)return null;
+    const yt=url.match(/(?:v=|youtu\.be\/|embed\/)([A-Za-z0-9_-]{11})/);
+    if(yt)return `https://www.youtube.com/embed/${yt[1]}?rel=0`;
+    const gd=url.match(/\/d\/([^/]+)/);
+    if(gd)return `https://drive.google.com/file/d/${gd[1]}/preview`;
+    return null;
+  };
 
   return(
     <>
@@ -670,7 +676,7 @@ function KBPage(){
             <div className="lin-section-head"><h3 className="lin-section-title">Video guides <span style={{fontWeight:400,color:'rgba(255,252,246,0.40)',fontSize:11,marginLeft:6}}>{videos.length} videos</span></h3></div>
             <div className="lin-video-list">
               {videos.map(v=>{
-                const embed=getYTEmbed(v.url);
+                const embed=getEmbed(v.url);
                 if(!embed)return null;
                 return(
                   <div key={v.id} className="lin-video-card">
