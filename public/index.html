@@ -875,8 +875,13 @@ function RufusPage({user}){
   const[hist,setHist]=useState([]);
   const[val,setVal]=useState('');
   const[typing,setTyping]=useState(false);
+  const[voiceMode,setVoiceMode]=useState(false);
+  const[listening,setListening]=useState(false);
+  const[ttsSupported]=useState(()=>'speechSynthesis' in window);
+  const[sttSupported]=useState(()=>'webkitSpeechRecognition' in window||'SpeechRecognition' in window);
   const scrollRef=useRef();
   useEffect(()=>{scrollRef.current?.scrollTo({top:9e9,behavior:'smooth'})},[msgs,typing]);
+  const speakText=useCallback(text=>{if(!ttsSupported)return;window.speechSynthesis.cancel();const utt=new SpeechSynthesisUtterance(text);utt.rate=0.95;utt.pitch=1;utt.volume=1;const voices=window.speechSynthesis.getVoices();const preferred=voices.find(v=>v.name.includes('Google US English')||v.name.includes('Samantha')||v.name.includes('Alex'));if(preferred)utt.voice=preferred;window.speechSynthesis.speak(utt);},[ttsSupported]);
   const send=useCallback(async text=>{
     if(!text.trim()||typing)return;
     setMsgs(m=>[...m,{r:'u',t:text}]);setVal('');setTyping(true);
@@ -884,10 +889,21 @@ function RufusPage({user}){
     try{
       const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:newH,customerProfile:user})});
       const d=await r.json();setTyping(false);
-      if(d.reply){setHist([...newH,{role:'assistant',content:d.reply}]);setMsgs(m=>[...m,{r:'a',h:fmtMsg(d.reply)}]);}
+      if(d.reply){setHist([...newH,{role:'assistant',content:d.reply}]);setMsgs(m=>[...m,{r:'a',h:fmtMsg(d.reply)}]);if(voiceMode)speakText(d.reply);}
       else setMsgs(m=>[...m,{r:'a',h:'Something went wrong. Please try again.'}]);
     }catch{setTyping(false);setMsgs(m=>[...m,{r:'a',h:'Connection error. Please try again.'}]);}
-  },[typing,hist,user]);
+  },[typing,hist,user,voiceMode,speakText]);
+  const startListening=()=>{
+    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    if(!SR)return;
+    setVoiceMode(true);setListening(true);
+    const rec=new SR();
+    rec.lang='en-US';rec.interimResults=false;rec.maxAlternatives=1;
+    rec.onresult=e=>{const transcript=e.results[0][0].transcript;setListening(false);setVal(transcript);setTimeout(()=>send(transcript),100);};
+    rec.onerror=()=>setListening(false);
+    rec.onend=()=>setListening(false);
+    rec.start();
+  };
   return(
     <div className="lin-rufus">
       <header className="lin-rufus-head">
@@ -917,7 +933,21 @@ function RufusPage({user}){
       </div>
       <footer className="lin-rufus-foot">
         {msgs.length===0&&<div className="lin-rufus-suggest">{SUGG.map(s=><button key={s} className="lin-chip" onClick={()=>send(s)}>{s}</button>)}</div>}
+        {voiceMode&&(
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'6px 12px',background:'rgba(204,17,34,0.06)',border:'1px solid rgba(204,17,34,0.15)',borderRadius:8,marginBottom:6,fontSize:11,color:'rgba(255,252,246,0.62)'}}>
+            <span style={{display:'flex',alignItems:'center',gap:6}}><span style={{width:6,height:6,borderRadius:'50%',background:'#CC1122',display:'inline-block'}}/>Voice mode — Rufus will speak his replies</span>
+            <button onClick={()=>{setVoiceMode(false);window.speechSynthesis.cancel();}} style={{background:'none',border:'none',color:'rgba(255,252,246,0.40)',cursor:'pointer',fontSize:11,padding:0}}>Turn off</button>
+          </div>
+        )}
         <div className="lin-rufus-input">
+          {sttSupported&&(
+            <button onClick={startListening} title={voiceMode?'Voice mode on — click to disable':'Click to use voice'} style={{background:voiceMode?'rgba(204,17,34,0.15)':'transparent',border:voiceMode?'1px solid rgba(204,17,34,0.4)':'1px solid rgba(255,255,255,0.08)',borderRadius:8,padding:'0 10px',height:36,cursor:'pointer',color:voiceMode?'#CC1122':'rgba(255,252,246,0.4)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,transition:'all .15s ease'}}>
+              {listening
+                ?<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="6" strokeDasharray="2 2"/><circle cx="8" cy="8" r="2" fill="currentColor"/></svg>
+                :<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="5.5" y="1.5" width="5" height="8" rx="2.5"/><path d="M3 8a5 5 0 0010 0"/><line x1="8" y1="13" x2="8" y2="15.5"/></svg>
+              }
+            </button>
+          )}
           <textarea rows={1} placeholder="Ask RUFUS anything about your simulator…" value={val} onChange={e=>setVal(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send(val)}}}/>
           <button className="lin-send" onClick={()=>send(val)} disabled={!val.trim()||typing}><Ico.Send width="13" height="13"/></button>
         </div>
