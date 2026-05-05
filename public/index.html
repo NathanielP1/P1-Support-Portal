@@ -378,6 +378,7 @@ function Login({onSignIn}){
   const[pw,setPw]=useState('');
   const[err,setErr]=useState('');
   const[loading,setLoading]=useState(false);
+  const[remember,setRemember]=useState(false);
   const submit=async e=>{
     e.preventDefault();setErr('');setLoading(true);
     try{
@@ -385,6 +386,7 @@ function Login({onSignIn}){
       const d=await r.json();
       if(!r.ok){setErr(d.error||'Login failed');setLoading(false);return;}
       onSignIn(d.customer);
+      if(remember){localStorage.setItem('p1_session',JSON.stringify({customer:d.customer,expires:Date.now()+30*24*60*60*1000}));}
     }catch{setErr('Connection error. Please try again.');setLoading(false);}
   };
   return(
@@ -401,6 +403,10 @@ function Login({onSignIn}){
           <input className="lin-input" type="email" value={email} onChange={e=>setEmail(e.target.value)} autoFocus placeholder="you@example.com"/>
           <label className="lin-label" style={{marginTop:14}}>Password</label>
           <input className="lin-input" type="password" value={pw} onChange={e=>setPw(e.target.value)} placeholder="••••••••" onKeyDown={e=>{if(e.key==='Enter')submit(e)}}/>
+          <div style={{display:'flex',alignItems:'center',gap:8,marginTop:12}}>
+            <input type="checkbox" id="rememberMe" checked={remember} onChange={e=>setRemember(e.target.checked)} style={{accentColor:'#CC1122',width:14,height:14,cursor:'pointer'}}/>
+            <label htmlFor="rememberMe" style={{fontSize:12,color:'rgba(255,252,246,0.62)',cursor:'pointer',userSelect:'none'}}>Keep me signed in for 30 days</label>
+          </div>
           <button className="lin-btn-primary" type="submit" style={{marginTop:20,width:'100%'}} disabled={loading}>
             {loading?<Spin/>:<>Continue<Ico.ChevR width="13" height="13"/></>}
           </button>
@@ -980,7 +986,7 @@ function NewsPage(){
 
 // ── APP ────────────────────────────────────────────────────────────────────
 function App(){
-  const[user,setUser]=useState(null);
+  const[user,setUser]=useState(()=>{try{const s=JSON.parse(localStorage.getItem('p1_session'));if(s&&s.expires>Date.now())return s.customer;}catch{}return null;});
   const[tab,setTab]=useState('home');
   const[collapsed,setCollapsed]=useState(()=>{
     const s=localStorage.getItem('p1_sidebar_collapsed');
@@ -1004,7 +1010,7 @@ function App(){
   return(
     <div className="lin-app">
       {showSearch&&<SearchModal onClose={()=>setShowSearch(false)} setTab={t=>{setTab(t);setShowSearch(false)}}/>}
-      <Sidebar tab={tab} setTab={setTab} user={user} collapsed={collapsed} setCollapsed={setCollapsed} onOpenSearch={()=>setShowSearch(true)} onLogout={()=>setUser(null)}/>
+      <Sidebar tab={tab} setTab={setTab} user={user} collapsed={collapsed} setCollapsed={setCollapsed} onOpenSearch={()=>setShowSearch(true)} onLogout={()=>{localStorage.removeItem('p1_session');setUser(null);}}/>
       <div className="lin-main-wrap">
         {tab==='home'   &&<Home user={user} setTab={setTab}/>}
         {tab==='kb'     &&<div style={{flex:1,overflowY:'auto',background:'#0a0a0c',height:'100%'}}><KBPage/></div>}
