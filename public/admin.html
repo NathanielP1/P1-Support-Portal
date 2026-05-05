@@ -642,6 +642,7 @@ function TicketDetail({ticket,onClose}){
 }
 
 // ── CUSTOMER LOOKUP ───────────────────────────────────────────────────────
+const warrantyStatus=date=>{if(!date)return null;const purchased=new Date(date);const expires=new Date(purchased);expires.setFullYear(expires.getFullYear()+1);return Date.now()<expires.getTime()?'active':'inactive';};
 function CustomerLookup({me}){
   const[customers,setCustomers]=useState([]);
   const[loading,setLoading]=useState(true);
@@ -751,6 +752,7 @@ function CustomerLookup({me}){
               <div className="st-customer-stats">
                 {active.rig&&<div className="st-cstat"><div className="st-cstat-l">Simulator</div><div className="st-cstat-v">{active.rig}</div></div>}
                 {active.purchase_date&&<div className="st-cstat"><div className="st-cstat-l">Purchased</div><div className="st-cstat-v">{active.purchase_date}</div></div>}
+                {active.purchase_date&&(()=>{const ws=warrantyStatus(active.purchase_date);return(<div className="st-cstat"><div className="st-cstat-l">Warranty</div><div className="st-cstat-v" style={{display:'flex',alignItems:'center',gap:6}}><span style={{width:7,height:7,borderRadius:'50%',background:ws==='active'?'#22c55e':'rgba(255,252,246,0.25)',display:'inline-block',flexShrink:0}}/>{ws==='active'?'Active':'Expired'}</div></div>);})()}
                 <div className="st-cstat"><div className="st-cstat-l">Tickets</div><div className="st-cstat-v">{custTickets.length}</div></div>
                 {active.motion_platform&&<div className="st-cstat"><div className="st-cstat-l">Motion</div><div className="st-cstat-v">{active.motion_platform}</div></div>}
                 {active.wheelbase&&<div className="st-cstat"><div className="st-cstat-l">Wheelbase</div><div className="st-cstat-v">{active.wheelbase}</div></div>}

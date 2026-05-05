@@ -53,6 +53,7 @@ button,input,textarea,select{font-family:inherit;color:inherit}
 .lin-kbd{margin-left:auto;font-family:var(--font-mono);font-size:10px;padding:1px 6px;border-radius:4px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.07);color:rgba(255,252,246,0.40);min-width:22px;text-align:center}
 .lin-dot{display:inline-block;width:6px;height:6px;border-radius:50%;flex-shrink:0}
 .lin-dot-green{background:#22c55e;box-shadow:0 0 6px rgba(34,197,94,0.5)}
+.lin-dot-grey{background:rgba(255,252,246,0.25)}
 .lin-avatar{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;background:linear-gradient(135deg,#5a060e,#cc1122);color:#fff;font-weight:600;flex-shrink:0;border:1px solid rgba(255,255,255,0.08)}
 /* APP SHELL */
 .lin-app{display:flex;height:100vh;height:100dvh;overflow:hidden}
@@ -368,6 +369,7 @@ const Pill=({tone='ghost',children})=><span className={'lin-pill lin-pill-'+tone
 const Spin=()=><span className="lin-spinner"/>;
 const Kbd=({k})=><kbd className="lin-kbd">{k}</kbd>;
 
+function warrantyStatus(date){if(!date)return null;const purchased=new Date(date);const expires=new Date(purchased);expires.setFullYear(expires.getFullYear()+1);return Date.now()<expires.getTime()?'active':'inactive';}
 function fmtMsg(t){return t.replace(/\*\*(.*?)\*\*/g,'<b>$1</b>').replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\n/g,'<br/>')}
 function fmtDate(iso){try{const d=new Date(iso),now=new Date(),diff=(now-d)/1e3;if(diff<0)return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});if(diff<3600)return Math.floor(diff/60)+'m ago';if(diff<86400)return Math.floor(diff/3600)+'h ago';if(diff<2592000)return Math.floor(diff/86400)+'d ago';return d.toLocaleDateString('en-US',{month:'short',day:'numeric'})}catch{return ''}}
 function statusTone(s=''){if(/resolv|closed|done/i.test(s))return 'green';if(/progress|working/i.test(s))return 'amber';if(/open|new/i.test(s))return 'blue';return 'ghost'}
@@ -514,7 +516,7 @@ function Sidebar({tab,setTab,user,collapsed,setCollapsed,onOpenSearch,onLogout})
             <div className="lin-rig-card">
               {user.rig&&<div className="lin-rig-row"><span className="lin-rig-key">Model</span><span className="lin-rig-val">{user.rig}</span></div>}
               {user.motionPlatform&&<div className="lin-rig-row"><span className="lin-rig-key">Motion</span><span className="lin-rig-val">{user.motionPlatform}</span></div>}
-              <div className="lin-rig-row"><span className="lin-rig-key">Warranty</span><span className="lin-rig-val"><span className="lin-dot lin-dot-green"/>Active</span></div>
+              {user.purchaseDate&&(()=>{const ws=warrantyStatus(user.purchaseDate);return(<div className="lin-rig-row"><span className="lin-rig-key">Warranty</span><span className="lin-rig-val"><span className={`lin-dot ${ws==='active'?'lin-dot-green':'lin-dot-grey'}`}/>{ws==='active'?'Active':'Expired'}</span></div>);})()}
             </div>
           </>
         )}
