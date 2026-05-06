@@ -14,6 +14,21 @@ function getRigStatusId(rigName) {
   return 2;
 }
 
+const CATEGORY_MAP = {
+  'Display / Triple screens': 'System Troubleshooting/Help',
+  'Sound & audio': 'System Troubleshooting/Help',
+  'Motion platform': 'System Troubleshooting/Help',
+  'USB / Connectivity': 'System Troubleshooting/Help',
+  'Software / Game configuration': 'System Troubleshooting/Help',
+  'Hardware / Physical': 'System Troubleshooting/Help',
+  'Other': 'System Troubleshooting/Help',
+  'New System Uncrating/Setup': 'New System Uncrating/Setup',
+  'Initial Walkthrough': 'Initial Walkthrough',
+  'System Troubleshooting/Help': 'System Troubleshooting/Help',
+};
+
+const toMondayCategory = (cat) => CATEGORY_MAP[cat] || 'System Troubleshooting/Help';
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -113,7 +128,8 @@ export default async function handler(req, res) {
         date4: { date: today },
         long_text_mm01mw0d: fullDescription,
         status: { index: getRigStatusId(resolvedRig) },
-        single_selectgcj60gd: { label: issueCategory || typeOfHelp || 'System Troubleshooting/Help' },
+        single_selectgcj60gd: { label: toMondayCategory(issueCategory || typeOfHelp) },
+        color_mm33wj6f: { label: issueCategory || typeOfHelp || 'Other' },
         color_mm02nprs: { label: 'Open' },
       });
 
