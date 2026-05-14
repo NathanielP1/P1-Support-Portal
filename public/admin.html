@@ -652,7 +652,7 @@ function CustomerLookup({me}){
   const[showModal,setShowModal]=useState(false);
   const[editData,setEditData]=useState({});
   const[showAddCust,setShowAddCust]=useState(false);
-  const[addForm,setAddForm]=useState({name:'',email:'',rig:'',city:'',purchase_date:'',motion_platform:'',wheelbase:'',specialist_name:'',specialist_email:''});
+  const[addForm,setAddForm]=useState({name:'',email:'',password:'',rig:'',city:'',purchase_date:'',motion_platform:'',wheelbase:'',specialist_name:'',specialist_email:''});
   const[addSaving,setAddSaving]=useState(false);
 
   const[csvRows,setCsvRows]=useState([]);
@@ -683,7 +683,7 @@ function CustomerLookup({me}){
     setAddSaving(true);
     await fetch('/api/customers',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'create',...addForm})});
     setAddSaving(false);setShowAddCust(false);
-    setAddForm({name:'',email:'',rig:'',city:'',purchase_date:'',motion_platform:'',wheelbase:'',specialist_name:'',specialist_email:''});
+    setAddForm({name:'',email:'',password:'',rig:'',city:'',purchase_date:'',motion_platform:'',wheelbase:'',specialist_name:'',specialist_email:''});
     fetch('/api/customers').then(r=>r.json()).then(d=>{const c=d.customers||[];setCustomers(c)});
   };
 
@@ -807,6 +807,7 @@ function CustomerLookup({me}){
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
                 <div className="st-form-field"><label className="st-form-label">Name *</label><input className="st-input" value={addForm.name} onChange={e=>setAddForm(f=>({...f,name:e.target.value}))} placeholder="Jane Smith" autoFocus/></div>
                 <div className="st-form-field"><label className="st-form-label">Email *</label><input className="st-input" type="email" value={addForm.email} onChange={e=>setAddForm(f=>({...f,email:e.target.value}))} placeholder="jane@example.com"/></div>
+                <div className="st-form-field"><label className="st-form-label">Password *</label><input className="st-input" type="text" value={addForm.password} onChange={e=>setAddForm(f=>({...f,password:e.target.value}))} placeholder="Temporary password"/></div>
                 <div className="st-form-field"><label className="st-form-label">City</label><input className="st-input" value={addForm.city} onChange={e=>setAddForm(f=>({...f,city:e.target.value}))} placeholder="Nashville, TN"/></div>
                 <div className="st-form-field"><label className="st-form-label">Purchase date</label><input className="st-input" value={addForm.purchase_date} onChange={e=>setAddForm(f=>({...f,purchase_date:e.target.value}))} placeholder="2024-06-15"/></div>
                 <div className="st-form-field"><label className="st-form-label">Simulator model</label><input className="st-input" value={addForm.rig} onChange={e=>setAddForm(f=>({...f,rig:e.target.value}))} placeholder="P1-X Ultimate"/></div>
@@ -816,7 +817,7 @@ function CustomerLookup({me}){
                 <div className="st-form-field"><label className="st-form-label">Specialist email</label><input className="st-input" type="email" value={addForm.specialist_email} onChange={e=>setAddForm(f=>({...f,specialist_email:e.target.value}))} placeholder="nathaniel@podium1racing.com"/></div>
               </div>
             </div>
-            <div className="st-modal-actions"><button className="st-btn-ghost" onClick={()=>setShowAddCust(false)}>Cancel</button><button className="st-btn-primary" onClick={addCustomer} disabled={!addForm.name||!addForm.email||addSaving}>{addSaving?<Spin/>:'Add customer'}</button></div>
+            <div className="st-modal-actions"><button className="st-btn-ghost" onClick={()=>setShowAddCust(false)}>Cancel</button><button className="st-btn-primary" onClick={addCustomer} disabled={!addForm.name||!addForm.email||!addForm.password||addSaving}>{addSaving?<Spin/>:'Add customer'}</button></div>
           </div>
         </div>
       )}
