@@ -56,6 +56,7 @@ export default async function handler(req, res) {
 
     const customer = customers[0];
     console.log('Customer found:', customer.name);
+
     const passwordMatch = await bcrypt.compare(password, customer.password);
     console.log('Password match:', passwordMatch);
 
