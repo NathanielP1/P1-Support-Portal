@@ -1,3 +1,5 @@
+import bcrypt from 'bcryptjs';
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -23,6 +25,9 @@ export default async function handler(req, res) {
       const { action, email, data } = req.body;
 
       if (action === 'create') {
+        if (data.password) {
+          data.password = await bcrypt.hash(data.password, 10);
+        }
         const r = await fetch(`${sbUrl}/rest/v1/customers`, {
           method: 'POST',
           headers: { ...headers, 'Prefer': 'return=minimal' },
@@ -40,6 +45,9 @@ export default async function handler(req, res) {
         const updateData = { ...data };
         delete updateData.email;
         if (!updateData.password) delete updateData.password;
+        if (updateData.password) {
+          updateData.password = await bcrypt.hash(updateData.password, 10);
+        }
         const r = await fetch(`${sbUrl}/rest/v1/customers?email=eq.${encodeURIComponent(email)}`, {
           method: 'PATCH',
           headers: { ...headers, 'Prefer': 'return=minimal' },

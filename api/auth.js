@@ -1,3 +1,5 @@
+import bcrypt from 'bcryptjs';
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -54,9 +56,10 @@ export default async function handler(req, res) {
 
     const customer = customers[0];
     console.log('Customer found:', customer.name);
-    console.log('Password match:', customer.password === password);
+    const passwordMatch = await bcrypt.compare(password, customer.password);
+    console.log('Password match:', passwordMatch);
 
-    if (customer.password !== password) {
+    if (!passwordMatch) {
       return res.status(401).json({ error: 'Incorrect email or password' });
     }
 
