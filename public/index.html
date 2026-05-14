@@ -225,6 +225,11 @@ button,input,textarea,select{font-family:inherit;color:inherit}
 .lin-file-row{display:flex;justify-content:space-between;font-size:12px;padding:6px 10px;background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.05);border-radius:6px}
 .lin-form-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:6px}
 .lin-success-card{display:flex;align-items:center;gap:18px;background:linear-gradient(180deg,rgba(34,197,94,0.06),rgba(255,255,255,0.01));border:1px solid rgba(34,197,94,0.18);border-radius:12px;padding:20px}
+.lin-calendly-wrap{margin-top:32px}
+.lin-calendly-head{font-size:13px;font-weight:600;color:rgba(255,252,246,0.62);letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px}
+.lin-calendly-sub{font-size:13px;color:rgba(255,252,246,0.4);margin-bottom:16px}
+.lin-calendly-embed{border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.06);min-height:700px}
+.lin-calendly-skip{margin-top:12px;text-align:center}
 .lin-success-mark{width:44px;height:44px;border-radius:50%;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.3);display:flex;align-items:center;justify-content:center;color:#22c55e;flex-shrink:0}
 .lin-success-title{font-size:15px;font-weight:600}
 .lin-success-sub{font-size:12px;color:rgba(255,252,246,0.62);margin-top:2px}
@@ -332,6 +337,8 @@ button,input,textarea,select{font-family:inherit;color:inherit}
 .lin-search-empty{padding:28px;text-align:center;font-size:13px;color:rgba(255,252,246,0.40)}
 .lin-search-hints{display:flex;gap:16px;padding:9px 16px;font-size:11px;color:rgba(255,252,246,0.28);border-top:1px solid rgba(255,255,255,0.05)}
 </style>
+<link href="https://assets.calendly.com/assets/external/widget.css" rel="stylesheet">
+<script src="https://assets.calendly.com/assets/external/widget.js" type="text/javascript" async></script>
 </head>
 <body>
 <div id="root"></div>
@@ -823,6 +830,11 @@ function TicketPage({user}){
   const[files,setFiles]=useState([]);
   const[status,setStatus]=useState('idle');
   const dragRef=useRef();
+  useEffect(()=>{
+    if(status==='done'&&window.Calendly){
+      window.Calendly.initInlineWidgets();
+    }
+  },[status]);
   const onPick=e=>setFiles(Array.from(e.target.files||e.dataTransfer?.files||[]).map(f=>({name:f.name,size:f.size})));
   const submit=async e=>{
     e.preventDefault();if(!desc.trim())return;setStatus('loading');
@@ -838,6 +850,18 @@ function TicketPage({user}){
         <div className="lin-success-mark"><Ico.Check width="20" height="20"/></div>
         <div><div className="lin-success-title">Ticket created</div><div className="lin-success-sub">Confirmation sent to {user.email}. We'll follow up shortly.</div></div>
         <button className="lin-btn-ghost" onClick={()=>{setStatus('idle');setDesc('');setFiles([])}}>Submit another</button>
+      </div>
+      <div className="lin-calendly-wrap">
+        <div className="lin-calendly-head">Want to book a support call?</div>
+        <div className="lin-calendly-sub">Pick a time that works for you — we'll match you with an available specialist.</div>
+        <div
+          className="lin-calendly-embed calendly-inline-widget"
+          data-url={"https://calendly.com/d/ctxc-r5r-xb2?hide_gdpr_banner=1&primary_color=cc1122&prefill_name="+encodeURIComponent(user.name)+"&prefill_email="+encodeURIComponent(user.email)}
+          style={{minWidth:'320px',height:'700px'}}
+        />
+        <div className="lin-calendly-skip">
+          <button className="lin-btn-ghost" onClick={()=>{setStatus('idle');setDesc('');setFiles([])}}>No thanks, I'll wait for a reply</button>
+        </div>
       </div>
     </div>
   );
