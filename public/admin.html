@@ -681,7 +681,7 @@ function CustomerLookup({me}){
   const addCustomer=async()=>{
     if(!addForm.name||!addForm.email)return;
     setAddSaving(true);
-    await fetch('/api/customers',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'create',...addForm})});
+    await fetch('/api/customers',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'create',data:addForm})});
     setAddSaving(false);setShowAddCust(false);
     setAddForm({name:'',email:'',password:'',rig:'',city:'',purchase_date:'',motion_platform:'',wheelbase:'',specialist_name:'',specialist_email:''});
     fetch('/api/customers').then(r=>r.json()).then(d=>{const c=d.customers||[];setCustomers(c)});
