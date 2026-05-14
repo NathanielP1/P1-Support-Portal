@@ -18,6 +18,7 @@ export default async function handler(req, res) {
   }
 
   const cleanEmail = email.toLowerCase().trim();
+  console.log('AUTH VERSION: crypto-sha256');
 
   try {
     const supabaseUrl = process.env.SUPABASE_URL;
