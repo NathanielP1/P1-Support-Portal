@@ -1,4 +1,8 @@
-import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
+
+function hashPassword(password) {
+  return crypto.createHash('sha256').update(password).digest('hex');
+}
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -26,7 +30,7 @@ export default async function handler(req, res) {
 
       if (action === 'create') {
         if (data.password) {
-          data.password = await bcrypt.hash(data.password, 10);
+          data.password = hashPassword(data.password);
         }
         const r = await fetch(`${sbUrl}/rest/v1/customers`, {
           method: 'POST',
@@ -44,9 +48,10 @@ export default async function handler(req, res) {
       if (action === 'update') {
         const updateData = { ...data };
         delete updateData.email;
-        if (!updateData.password) delete updateData.password;
         if (updateData.password) {
-          updateData.password = await bcrypt.hash(updateData.password, 10);
+          updateData.password = hashPassword(updateData.password);
+        } else {
+          delete updateData.password;
         }
         const r = await fetch(`${sbUrl}/rest/v1/customers?email=eq.${encodeURIComponent(email)}`, {
           method: 'PATCH',

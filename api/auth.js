@@ -1,4 +1,8 @@
-import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
+
+function hashPassword(password) {
+  return crypto.createHash('sha256').update(password).digest('hex');
+}
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -57,7 +61,11 @@ export default async function handler(req, res) {
     const customer = customers[0];
     console.log('Customer found:', customer.name);
 
-    const passwordMatch = await bcrypt.compare(password, customer.password);
+    const hashedInput = hashPassword(password);
+    const storedPassword = customer.password;
+
+    // Support both plain text (legacy) and hashed passwords during transition
+    const passwordMatch = storedPassword === hashedInput || storedPassword === password;
     console.log('Password match:', passwordMatch);
 
     if (!passwordMatch) {
