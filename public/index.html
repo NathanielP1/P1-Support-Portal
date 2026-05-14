@@ -337,7 +337,6 @@ button,input,textarea,select{font-family:inherit;color:inherit}
 .lin-search-empty{padding:28px;text-align:center;font-size:13px;color:rgba(255,252,246,0.40)}
 .lin-search-hints{display:flex;gap:16px;padding:9px 16px;font-size:11px;color:rgba(255,252,246,0.28);border-top:1px solid rgba(255,255,255,0.05)}
 </style>
-<script type="text/javascript" src="https://assets.calendly.com/assets/external/widget.js" async></script>
 </head>
 <body>
 <div id="root"></div>
@@ -847,13 +846,22 @@ function TicketPage({user}){
       <PageHead eyebrow="TICKET SUBMITTED" title="We've got it." sub="A specialist will reply within 4 hours during business hours."/>
       <div className="lin-success-card">
         <div className="lin-success-mark"><Ico.Check width="20" height="20"/></div>
-        <div><div className="lin-success-title">Ticket created</div><div className="lin-success-sub">Confirmation sent to {user.email}. We'll follow up shortly.</div></div>
+        <div><div className="lin-success-title">Ticket created</div><div className="lin-success-sub">Confirmation sent to {user.email}. We will follow up shortly.</div></div>
         <button className="lin-btn-ghost" onClick={()=>{setStatus('idle');setDesc('');setFiles([])}}>Submit another</button>
       </div>
       <div style={{marginTop:32}}>
         <div style={{fontSize:13,fontWeight:600,color:'rgba(255,252,246,0.62)',letterSpacing:'.06em',textTransform:'uppercase',marginBottom:4}}>Want to book a support call?</div>
         <div style={{fontSize:13,color:'rgba(255,252,246,0.4)',marginBottom:16}}>Pick a time that works for you — we will match you with an available specialist.</div>
-        <div className="calendly-inline-widget" data-url={"https://calendly.com/d/ctxc-r5r-xb2?hide_gdpr_banner=1&primary_color=cc1122&name="+encodeURIComponent(user.name)+"&email="+encodeURIComponent(user.email)} style={{minWidth:'320px',height:'700px',borderRadius:'12px',overflow:'hidden',border:'1px solid rgba(255,255,255,0.06)'}}/>
+        <div style={{borderRadius:12,overflow:'hidden',border:'1px solid rgba(255,255,255,0.06)',minHeight:700}}>
+          <iframe
+            src={"https://calendly.com/d/ctxc-r5r-xb2?hide_gdpr_banner=1&primary_color=cc1122&name="+encodeURIComponent(user.name)+"&email="+encodeURIComponent(user.email)}
+            width="100%"
+            height="700"
+            frameBorder="0"
+            title="Book a support call"
+            style={{display:'block'}}
+          />
+        </div>
         <div style={{marginTop:12,textAlign:'center'}}>
           <button className="lin-btn-ghost" onClick={()=>{setStatus('idle');setDesc('');setFiles([])}}>No thanks, I will wait for a reply</button>
         </div>
