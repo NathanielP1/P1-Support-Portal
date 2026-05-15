@@ -643,6 +643,15 @@ function TicketDetail({ticket,onClose}){
 
 // ── CUSTOMER LOOKUP ───────────────────────────────────────────────────────
 const warrantyStatus=date=>{if(!date)return null;const purchased=new Date(date);const expires=new Date(purchased);expires.setFullYear(expires.getFullYear()+1);return Date.now()<expires.getTime()?'active':'inactive';};
+const RIG_PRESETS={
+  '':{rig:'',wheelbase:'',pedals:'',monitors:'',resolution:'',graphics_card:'',motion_platform:'',add_ons:''},
+  'Fanatec Clubsport GT':{rig:'Fanatec Clubsport GT',wheelbase:'Fanatec ClubSport DD',pedals:'Fanatec ClubSport Pedals V3',monitors:'Triple QHD 165+ Refresh Rate',resolution:'7680 × 1440',graphics_card:'RTX 50 Series',motion_platform:'None',add_ons:''},
+  'P3':{rig:'P3',wheelbase:'MOZA R12 Direct Drive',pedals:'MOZA CRPv2 Load Cell Pedals',monitors:'Triple QHD 165+ Refresh Rate',resolution:'7680 × 1440',graphics_card:'RTX 50 Series',motion_platform:'None',add_ons:''},
+  'P2':{rig:'P2',wheelbase:'Asetek Forte Direct Drive',pedals:'Asetek Forte Racing Pedals w Invicta Clutch',monitors:'Triple QHD 144+ Refresh Rate',resolution:'7680 × 1440',graphics_card:'RTX 5070',motion_platform:'None',add_ons:'Heusinkveld Mag Shifter, 5.1 Surround Sound'},
+  'P1':{rig:'P1',wheelbase:'Asetek Invicta 27Nm',pedals:'Simucube Active Pedal (Brake) + Simucube Co-Pedal (Throttle)',monitors:'Triple 45" LG Ultragear OLED',resolution:'10320 × 1440',graphics_card:'RTX 50 Series',motion_platform:'None',add_ons:'5.1 Surround Sound'},
+  'P1 S 4DOF':{rig:'P1 S 4DOF',wheelbase:'Asetek Invicta 27Nm',pedals:'Heusinkveld Ultimate+ or 3x Simucube Active Pedals',monitors:'Triple 55" Samsung Ark or Triple 45" LG Ultragear OLED',resolution:'11520 × 2160',graphics_card:'RTX 5090',motion_platform:'Qubic QS-V20 4DOF (QubicManager)',add_ons:'5.1 Surround Sound, Qubic Belt Tensioner'},
+  'P1 Spyder 6DOF':{rig:'P1 Spyder 6DOF',wheelbase:'Asetek Invicta 27Nm',pedals:'3x Simucube Active Pedals (Brake + Clutch + Throttle)',monitors:'Triple 55" Samsung Ark or Triple 32" AOC',resolution:'11520 × 2160',graphics_card:'RTX 5090',motion_platform:'Qubic QS-S25 6DOF (QubicManager)',add_ons:'5.1 Surround Sound, Qubic Belt Tensioner, Wind Simulation Kit, BDH H1SQ Shifter, Heusinkveld E-Brake'},
+};
 function CustomerLookup({me}){
   const[customers,setCustomers]=useState([]);
   const[loading,setLoading]=useState(true);
@@ -652,7 +661,7 @@ function CustomerLookup({me}){
   const[showModal,setShowModal]=useState(false);
   const[editData,setEditData]=useState({});
   const[showAddCust,setShowAddCust]=useState(false);
-  const[addForm,setAddForm]=useState({name:'',email:'',password:'',rig:'',purchase_date:'',motion_platform:'',wheelbase:'',specialist_name:'',specialist_email:''});
+  const[addForm,setAddForm]=useState({name:'',email:'',password:'',rig:'',wheelbase:'',pedals:'',monitors:'',resolution:'',graphics_card:'',motion_platform:'',add_ons:'',purchase_date:'',specialist_name:'',specialist_email:''});
   const[addSaving,setAddSaving]=useState(false);
 
   const[csvRows,setCsvRows]=useState([]);
@@ -683,8 +692,13 @@ function CustomerLookup({me}){
     setAddSaving(true);
     await fetch('/api/customers',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'create',data:addForm})});
     setAddSaving(false);setShowAddCust(false);
-    setAddForm({name:'',email:'',password:'',rig:'',purchase_date:'',motion_platform:'',wheelbase:'',specialist_name:'',specialist_email:''});
+    setAddForm({name:'',email:'',password:'',rig:'',wheelbase:'',pedals:'',monitors:'',resolution:'',graphics_card:'',motion_platform:'',add_ons:'',purchase_date:'',specialist_name:'',specialist_email:''});
     fetch('/api/customers').then(r=>r.json()).then(d=>{const c=d.customers||[];setCustomers(c)});
+  };
+
+  const handleRigSelect=preset=>{
+    const p=RIG_PRESETS[preset]||RIG_PRESETS[''];
+    setAddForm(f=>({...f,...p,rig:preset}));
   };
 
   const parseCSV=text=>{
@@ -712,7 +726,25 @@ function CustomerLookup({me}){
     setImporting(true);let done=0;
     for(const row of csvRows){
       if(!row.email&&!row.name)continue;
-      await fetch('/api/customers',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'create',name:row.name||'',email:row.email||'',rig:row.rig||row.simulator||'',city:row.city||'',purchase_date:row.purchase_date||row['purchase date']||'',motion_platform:row.motion_platform||row['motion platform']||'',wheelbase:row.wheelbase||''})}).catch(()=>{});
+      const rigKey=row.rig||row.simulator||row['rig model']||'';
+      const preset=RIG_PRESETS[rigKey]||RIG_PRESETS[''];
+      const customerData={
+        name:row.name||'',
+        email:row.email||'',
+        password:row.password||'changeme123',
+        rig:rigKey,
+        wheelbase:row.wheelbase||preset.wheelbase||'',
+        pedals:row.pedals||preset.pedals||'',
+        monitors:row.monitors||preset.monitors||'',
+        resolution:row.resolution||preset.resolution||'',
+        graphics_card:row.graphics_card||row['graphics card']||preset.graphics_card||'',
+        motion_platform:row.motion_platform||row['motion platform']||preset.motion_platform||'',
+        add_ons:row.add_ons||row['add ons']||preset.add_ons||'',
+        purchase_date:row.purchase_date||row['purchase date']||'',
+        specialist_name:row.specialist_name||row['specialist name']||'',
+        specialist_email:row.specialist_email||row['specialist email']||'',
+      };
+      await fetch('/api/customers',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'create',data:customerData})}).catch(()=>{});
       done++;setImportDone(done);
     }
     setImporting(false);
@@ -805,15 +837,31 @@ function CustomerLookup({me}){
             <div className="st-modal-head"><span className="st-modal-title">Add new customer</span><button className="st-icon-btn" onClick={()=>setShowAddCust(false)}><I.X width="13" height="13"/></button></div>
             <div className="st-modal-body">
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+                <div className="st-form-field" style={{gridColumn:'1/-1'}}>
+                  <label className="st-form-label">Simulator Model *</label>
+                  <select className="st-input" value={addForm.rig} onChange={e=>handleRigSelect(e.target.value)}>
+                    <option value="">— Select a rig —</option>
+                    <option value="Fanatec Clubsport GT">Fanatec Clubsport GT</option>
+                    <option value="P3">P3</option>
+                    <option value="P2">P2</option>
+                    <option value="P1">P1</option>
+                    <option value="P1 S 4DOF">P1 S 4DOF</option>
+                    <option value="P1 Spyder 6DOF">P1 Spyder 6DOF</option>
+                  </select>
+                </div>
                 <div className="st-form-field"><label className="st-form-label">Name *</label><input className="st-input" value={addForm.name} onChange={e=>setAddForm(f=>({...f,name:e.target.value}))} placeholder="Jane Smith" autoFocus/></div>
                 <div className="st-form-field"><label className="st-form-label">Email *</label><input className="st-input" type="email" value={addForm.email} onChange={e=>setAddForm(f=>({...f,email:e.target.value}))} placeholder="jane@example.com"/></div>
                 <div className="st-form-field"><label className="st-form-label">Password *</label><input className="st-input" type="text" value={addForm.password} onChange={e=>setAddForm(f=>({...f,password:e.target.value}))} placeholder="Temporary password"/></div>
-                <div className="st-form-field"><label className="st-form-label">Purchase date</label><input className="st-input" value={addForm.purchase_date} onChange={e=>setAddForm(f=>({...f,purchase_date:e.target.value}))} placeholder="2024-06-15"/></div>
-                <div className="st-form-field"><label className="st-form-label">Simulator model</label><input className="st-input" value={addForm.rig} onChange={e=>setAddForm(f=>({...f,rig:e.target.value}))} placeholder="P1-X Ultimate"/></div>
-                <div className="st-form-field"><label className="st-form-label">Wheelbase</label><input className="st-input" value={addForm.wheelbase} onChange={e=>setAddForm(f=>({...f,wheelbase:e.target.value}))} placeholder="Fanatec DD2"/></div>
-                <div className="st-form-field" style={{gridColumn:'1/-1'}}><label className="st-form-label">Motion platform</label><input className="st-input" value={addForm.motion_platform} onChange={e=>setAddForm(f=>({...f,motion_platform:e.target.value}))} placeholder="Simtag 6DOF"/></div>
-                <div className="st-form-field"><label className="st-form-label">Specialist name</label><input className="st-input" value={addForm.specialist_name} onChange={e=>setAddForm(f=>({...f,specialist_name:e.target.value}))} placeholder="Nathaniel Thorpe"/></div>
-                <div className="st-form-field"><label className="st-form-label">Specialist email</label><input className="st-input" type="email" value={addForm.specialist_email} onChange={e=>setAddForm(f=>({...f,specialist_email:e.target.value}))} placeholder="nathaniel@podium1racing.com"/></div>
+                <div className="st-form-field"><label className="st-form-label">Purchase Date</label><input className="st-input" value={addForm.purchase_date} onChange={e=>setAddForm(f=>({...f,purchase_date:e.target.value}))} placeholder="2025-01-15"/></div>
+                <div className="st-form-field"><label className="st-form-label">Wheelbase</label><input className="st-input" value={addForm.wheelbase} onChange={e=>setAddForm(f=>({...f,wheelbase:e.target.value}))} placeholder="Asetek Invicta 27Nm"/></div>
+                <div className="st-form-field"><label className="st-form-label">Pedals</label><input className="st-input" value={addForm.pedals} onChange={e=>setAddForm(f=>({...f,pedals:e.target.value}))} placeholder="Simucube Active Pedal"/></div>
+                <div className="st-form-field"><label className="st-form-label">Monitors</label><input className="st-input" value={addForm.monitors} onChange={e=>setAddForm(f=>({...f,monitors:e.target.value}))} placeholder='Triple 45" LG Ultragear OLED'/></div>
+                <div className="st-form-field"><label className="st-form-label">Resolution</label><input className="st-input" value={addForm.resolution} onChange={e=>setAddForm(f=>({...f,resolution:e.target.value}))} placeholder="10320 × 1440"/></div>
+                <div className="st-form-field"><label className="st-form-label">Graphics Card</label><input className="st-input" value={addForm.graphics_card} onChange={e=>setAddForm(f=>({...f,graphics_card:e.target.value}))} placeholder="RTX 5090"/></div>
+                <div className="st-form-field"><label className="st-form-label">Motion Platform</label><input className="st-input" value={addForm.motion_platform} onChange={e=>setAddForm(f=>({...f,motion_platform:e.target.value}))} placeholder="Qubic QS-V20 4DOF"/></div>
+                <div className="st-form-field" style={{gridColumn:'1/-1'}}><label className="st-form-label">Add-Ons</label><input className="st-input" value={addForm.add_ons} onChange={e=>setAddForm(f=>({...f,add_ons:e.target.value}))} placeholder="5.1 Surround Sound, Belt Tensioner"/></div>
+                <div className="st-form-field"><label className="st-form-label">Specialist Name</label><input className="st-input" value={addForm.specialist_name} onChange={e=>setAddForm(f=>({...f,specialist_name:e.target.value}))} placeholder="Nathaniel Thorpe"/></div>
+                <div className="st-form-field"><label className="st-form-label">Specialist Email</label><input className="st-input" type="email" value={addForm.specialist_email} onChange={e=>setAddForm(f=>({...f,specialist_email:e.target.value}))} placeholder="nathaniel@podium1racing.com"/></div>
               </div>
             </div>
             <div className="st-modal-actions"><button className="st-btn-ghost" onClick={()=>setShowAddCust(false)}>Cancel</button><button className="st-btn-primary" onClick={addCustomer} disabled={!addForm.name||!addForm.email||!addForm.password||addSaving}>{addSaving?<Spin/>:'Add customer'}</button></div>
