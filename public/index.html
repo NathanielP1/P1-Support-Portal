@@ -366,6 +366,7 @@ const Ico={
   Dl:      p=><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2"/><polyline points="5,7 8,10 11,7"/><line x1="8" y1="2" x2="8" y2="10"/></svg>,
   List:    p=><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" {...p}><line x1="6" y1="4" x2="14" y2="4"/><line x1="6" y1="8" x2="14" y2="8"/><line x1="6" y1="12" x2="14" y2="12"/><circle cx="2.5" cy="4" r="1" fill="currentColor" stroke="none"/><circle cx="2.5" cy="8" r="1" fill="currentColor" stroke="none"/><circle cx="2.5" cy="12" r="1" fill="currentColor" stroke="none"/></svg>,
   Grid:    p=><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...p}><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>,
+  User:    p=><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="8" cy="5.5" r="3"/><path d="M2 14c0-3.314 2.686-5 6-5s6 1.686 6 5"/></svg>,
 
 };
 
@@ -471,7 +472,7 @@ function Sidebar({tab,setTab,user,collapsed,setCollapsed,onOpenSearch,onLogout})
     {k:'ticket', l:'Submit a Ticket', i:Ico.Ticket, kbd:'T'},
     {k:'rufus',  l:'Ask RUFUS',       i:Ico.Spark,  kbd:'R',online:true},
     {k:'news',   l:'Sim Racing News', i:Ico.News,   kbd:'N'},
-
+    {k:'account',l:'Account',         i:Ico.User,   kbd:'A'},
   ];
   const initials_=user.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
   const go=k=>{
@@ -1043,6 +1044,68 @@ function NewsPage(){
 }
 
 
+// ── CHANGE PASSWORD ───────────────────────────────────────────────────────
+function ChangePassword({user}){
+  const[current,setCurrent]=React.useState('');
+  const[newPass,setNewPass]=React.useState('');
+  const[confirm,setConfirm]=React.useState('');
+  const[status,setStatus]=React.useState('idle');
+  const[msg,setMsg]=React.useState('');
+
+  const handleSubmit=async()=>{
+    if(!current||!newPass||!confirm){setMsg('Please fill in all fields.');setStatus('error');return;}
+    if(newPass!==confirm){setMsg('New passwords do not match.');setStatus('error');return;}
+    if(newPass.length<6){setMsg('Password must be at least 6 characters.');setStatus('error');return;}
+    setStatus('saving');
+    try{
+      const r=await fetch('/api/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:user.email,password:current})});
+      if(!r.ok){setMsg('Current password is incorrect.');setStatus('error');return;}
+      const u=await fetch('/api/customers',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'update',email:user.email,data:{password:newPass}})});
+      if(!u.ok){setMsg('Failed to update password. Please try again.');setStatus('error');return;}
+      setStatus('done');
+      setMsg('Password updated successfully!');
+      setCurrent('');setNewPass('');setConfirm('');
+      const session=JSON.parse(localStorage.getItem('p1_session')||'{}');
+      if(session.customer){session.customer.password=undefined;localStorage.setItem('p1_session',JSON.stringify(session));}
+    }catch(e){
+      setMsg('Something went wrong. Please try again.');
+      setStatus('error');
+    }
+  };
+
+  return(
+    <div style={{maxWidth:420}}>
+      <div style={{fontSize:13,fontWeight:600,color:'rgba(255,252,246,0.62)',letterSpacing:'.06em',textTransform:'uppercase',marginBottom:16}}>Change Password</div>
+      <div style={{display:'flex',flexDirection:'column',gap:12}}>
+        <div>
+          <div style={{fontSize:11,color:'rgba(255,252,246,0.4)',marginBottom:4,textTransform:'uppercase',letterSpacing:'.05em'}}>Current Password</div>
+          <input type="password" value={current} onChange={e=>setCurrent(e.target.value)} style={{width:'100%',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:8,padding:'8px 12px',color:'rgba(255,252,246,0.9)',fontSize:13,outline:'none',boxSizing:'border-box'}} placeholder="Enter current password"/>
+        </div>
+        <div>
+          <div style={{fontSize:11,color:'rgba(255,252,246,0.4)',marginBottom:4,textTransform:'uppercase',letterSpacing:'.05em'}}>New Password</div>
+          <input type="password" value={newPass} onChange={e=>setNewPass(e.target.value)} style={{width:'100%',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:8,padding:'8px 12px',color:'rgba(255,252,246,0.9)',fontSize:13,outline:'none',boxSizing:'border-box'}} placeholder="At least 6 characters"/>
+        </div>
+        <div>
+          <div style={{fontSize:11,color:'rgba(255,252,246,0.4)',marginBottom:4,textTransform:'uppercase',letterSpacing:'.05em'}}>Confirm New Password</div>
+          <input type="password" value={confirm} onChange={e=>setConfirm(e.target.value)} style={{width:'100%',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:8,padding:'8px 12px',color:'rgba(255,252,246,0.9)',fontSize:13,outline:'none',boxSizing:'border-box'}} placeholder="Repeat new password"/>
+        </div>
+        {msg&&(
+          <div style={{fontSize:12,padding:'8px 12px',borderRadius:8,background:status==='done'?'rgba(34,197,94,0.08)':'rgba(204,17,34,0.08)',border:status==='done'?'1px solid rgba(34,197,94,0.2)':'1px solid rgba(204,17,34,0.2)',color:status==='done'?'#22c55e':'#ff6b6b'}}>
+            {msg}
+          </div>
+        )}
+        <button
+          onClick={handleSubmit}
+          disabled={status==='saving'}
+          style={{background:'#CC1122',border:'none',borderRadius:8,padding:'10px 20px',color:'#fff',fontSize:13,fontWeight:600,cursor:status==='saving'?'not-allowed':'pointer',opacity:status==='saving'?0.6:1,alignSelf:'flex-start'}}
+        >
+          {status==='saving'?'Updating...':'Update Password'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ── APP ────────────────────────────────────────────────────────────────────
 function App(){
   const[user,setUser]=useState(()=>{try{const s=JSON.parse(localStorage.getItem('p1_session'));if(s&&s.expires>Date.now())return s.customer;}catch{}return null;});
@@ -1059,7 +1122,7 @@ function App(){
     const h=e=>{
       if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.tagName==='SELECT')return;
       if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();setShowSearch(true);return;}
-      const map={h:'home',b:'kb',t:'ticket',r:'rufus',n:'news'};
+      const map={h:'home',b:'kb',t:'ticket',r:'rufus',n:'news',a:'account'};
       if(map[e.key.toLowerCase()])setTab(map[e.key.toLowerCase()]);
     };
     window.addEventListener('keydown',h);return()=>window.removeEventListener('keydown',h);
@@ -1076,6 +1139,7 @@ function App(){
         {tab==='ticket' &&<div style={{flex:1,overflowY:'auto',background:'#0a0a0c',height:'100%'}}><TicketPage user={user}/></div>}
         {tab==='rufus'  &&<RufusPage user={user}/>}
         {tab==='news'   &&<div style={{flex:1,overflowY:'auto',background:'#0a0a0c',height:'100%'}}><NewsPage/></div>}
+        {tab==='account'&&<div style={{flex:1,overflowY:'auto',background:'#0a0a0c',height:'100%'}}><div className="lin-page"><PageHead eyebrow="YOUR ACCOUNT" title="Account Settings" sub="Manage your login credentials."/><ChangePassword user={user}/></div></div>}
 
       </div>
     </div>
