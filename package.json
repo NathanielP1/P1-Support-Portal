@@ -3,5 +3,8 @@
   "version": "1.0.0",
   "description": "Podium 1 Racing Customer Support Portal",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "bcryptjs": "^2.4.3"
+  }
 }
