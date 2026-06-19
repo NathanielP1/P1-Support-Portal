@@ -1,7 +1,7 @@
-import crypto from 'crypto';
+import bcrypt from 'bcryptjs';
 
 function hashPassword(password) {
-  return crypto.createHash('sha256').update(password).digest('hex');
+  return bcrypt.hashSync(password, 10);
 }
 
 export default async function handler(req, res) {
