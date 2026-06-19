@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import bcrypt from 'bcryptjs';
 
 function hashPassword(password) {
   return crypto.createHash('sha256').update(password).digest('hex');
@@ -62,11 +63,19 @@ export default async function handler(req, res) {
     const customer = customers[0];
     console.log('Customer found:', customer.name);
 
-    const hashedInput = hashPassword(password);
-    const storedPassword = customer.password;
+    const storedPassword = customer.password || '';
+    const isBcrypt = storedPassword.startsWith('$2a$') || storedPassword.startsWith('$2b$') || storedPassword.startsWith('$2y$');
 
-    // Support both plain text (legacy) and hashed passwords during transition
-    const passwordMatch = storedPassword === hashedInput || storedPassword === password;
+    // Verify password. bcrypt is the target scheme; SHA-256 and plaintext are
+    // accepted as fallbacks during the transition and can be removed once all
+    // customer rows are bcrypt.
+    let passwordMatch = false;
+    if (isBcrypt) {
+      passwordMatch = await bcrypt.compare(password, storedPassword);
+    } else {
+      const hashedInput = hashPassword(password);
+      passwordMatch = storedPassword === hashedInput || storedPassword === password;
+    }
     console.log('Password match:', passwordMatch);
 
     if (!passwordMatch) {
