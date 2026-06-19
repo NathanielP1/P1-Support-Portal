@@ -1,3 +1,5 @@
+import bcrypt from 'bcryptjs';
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -31,7 +33,20 @@ export default async function handler(req, res) {
     }
 
     const member = staff[0];
-    if (member.password !== password) {
+
+    // Verify password. Supports bcrypt hashes ($2a/$2b/$2y) and, during the
+    // transition, legacy plaintext values. Once all rows are bcrypt, the
+    // plaintext fallback can be removed.
+    const stored = member.password || '';
+    const isBcrypt = stored.startsWith('$2a$') || stored.startsWith('$2b$') || stored.startsWith('$2y$');
+    let passwordMatch = false;
+    if (isBcrypt) {
+      passwordMatch = await bcrypt.compare(password, stored);
+    } else {
+      passwordMatch = stored === password;
+    }
+
+    if (!passwordMatch) {
       return res.status(401).json({ error: 'Incorrect email or password' });
     }
 
