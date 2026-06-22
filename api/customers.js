@@ -40,7 +40,13 @@ export default async function handler(req, res) {
         if (!r.ok) {
           const err = await r.text();
           console.error('Supabase create error:', err);
-          return res.status(400).json({ error: 'Failed to create customer. Email may already exist.' });
+          // Postgres unique-violation (duplicate email) → distinct signal so
+          // the CSV import can report "skipped (already exists)" vs a real failure.
+          const isDuplicate = r.status === 409 || err.includes('23505') || err.toLowerCase().includes('duplicate');
+          if (isDuplicate) {
+            return res.status(409).json({ error: 'Customer with this email already exists.', code: 'duplicate' });
+          }
+          return res.status(400).json({ error: 'Failed to create customer.' });
         }
         return res.status(200).json({ success: true });
       }
