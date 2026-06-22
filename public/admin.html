@@ -668,6 +668,7 @@ function CustomerLookup({me}){
   const[showCSV,setShowCSV]=useState(false);
   const[importing,setImporting]=useState(false);
   const[importDone,setImportDone]=useState(0);
+  const[importResult,setImportResult]=useState(null);
   const csvRef=useRef(null);
 
   useEffect(()=>{
@@ -717,21 +718,36 @@ function CustomerLookup({me}){
   const handleCSVFile=e=>{
     const file=e.target.files?.[0];if(!file)return;
     const reader=new FileReader();
-    reader.onload=ev=>{const rows=parseCSV(ev.target.result);setCsvRows(rows);setShowCSV(true);setImportDone(0)};
+    reader.onload=ev=>{const rows=parseCSV(ev.target.result);setCsvRows(rows);setShowCSV(true);setImportDone(0);setImportResult(null)};
     reader.readAsText(file);
     e.target.value='';
   };
 
   const importCSV=async()=>{
-    setImporting(true);let done=0;
+    setImporting(true);setImportResult(null);
+    let done=0;
+    const created=[]; // {name,email,tempPassword}
+    const skipped=[]; // {email,reason}
+    const failed=[];  // {email,reason}
+    // Generate a unique, reasonably strong temporary password per customer.
+    const genTempPw=()=>{
+      const chars='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
+      let s='';for(let i=0;i<10;i++)s+=chars[Math.floor(Math.random()*chars.length)];
+      return 'P1-'+s;
+    };
     for(const row of csvRows){
-      if(!row.email&&!row.name)continue;
+      const email=(row.email||'').trim();
+      if(!email&&!row.name){continue;} // truly empty row, ignore silently
+      if(!email){failed.push({email:row.name||'(no email)',reason:'missing email'});done++;setImportDone(done);continue;}
       const rigKey=row.rig||row.simulator||row['rig model']||'';
       const preset=RIG_PRESETS[rigKey]||RIG_PRESETS[''];
+      const suppliedPw=(row.password||'').trim();
+      const tempPw=suppliedPw||genTempPw();
       const customerData={
         name:row.name||'',
-        email:row.email||'',
-        password:row.password||'changeme123',
+        email:email,
+        password:tempPw,
+        must_set_password:!suppliedPw, // if we generated it, force a reset on first login
         rig:rigKey,
         wheelbase:row.wheelbase||preset.wheelbase||'',
         pedals:row.pedals||preset.pedals||'',
@@ -744,12 +760,25 @@ function CustomerLookup({me}){
         specialist_name:row.specialist_name||row['specialist name']||'',
         specialist_email:row.specialist_email||row['specialist email']||'',
       };
-      await fetch('/api/customers',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'create',data:customerData})}).catch(()=>{});
+      try{
+        const r=await fetch('/api/customers',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'create',data:customerData})});
+        if(r.ok){
+          created.push({name:customerData.name,email,tempPassword:suppliedPw?'(set in sheet)':tempPw});
+        }else if(r.status===409){
+          skipped.push({email,reason:'already exists'});
+        }else{
+          let msg='error';try{const d=await r.json();msg=d.error||msg;}catch{}
+          failed.push({email,reason:msg});
+        }
+      }catch(err){
+        failed.push({email,reason:'network error'});
+      }
       done++;setImportDone(done);
     }
     setImporting(false);
+    setImportResult({created,skipped,failed,total:csvRows.length});
     fetch('/api/customers').then(r=>r.json()).then(d=>setCustomers(d.customers||[]));
-    setTimeout(()=>setShowCSV(false),1000);
+    // NOTE: modal stays open so the staff member can review results / copy temp passwords.
   };
 
   return(
@@ -871,19 +900,67 @@ function CustomerLookup({me}){
       {showCSV&&(
         <div className="st-overlay" onClick={()=>{if(!importing)setShowCSV(false)}}>
           <div className="st-modal" style={{maxWidth:560}} onClick={e=>e.stopPropagation()}>
-            <div className="st-modal-head"><span className="st-modal-title">Import CSV — {csvRows.length} rows</span><button className="st-icon-btn" onClick={()=>setShowCSV(false)} disabled={importing}><I.X width="13" height="13"/></button></div>
-            <div style={{maxHeight:260,overflowY:'auto',marginBottom:14,background:'rgba(255,255,255,0.02)',border:'1px solid rgba(255,255,255,0.06)',borderRadius:8}}>
-              {csvRows.slice(0,20).map((r,i)=>(
-                <div key={i} style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,padding:'7px 12px',borderTop:i?'1px solid rgba(255,255,255,0.04)':'none',fontSize:12}}>
-                  <span style={{color:'#fff',fontWeight:500}}>{r.name||'—'}</span>
-                  <span style={{color:'rgba(255,252,246,0.50)'}}>{r.email||'—'}</span>
+            <div className="st-modal-head"><span className="st-modal-title">{importResult?'Import results':`Import CSV — ${csvRows.length} rows`}</span><button className="st-icon-btn" onClick={()=>setShowCSV(false)} disabled={importing}><I.X width="13" height="13"/></button></div>
+
+            {!importResult&&(
+              <>
+                <div style={{maxHeight:260,overflowY:'auto',marginBottom:14,background:'rgba(255,255,255,0.02)',border:'1px solid rgba(255,255,255,0.06)',borderRadius:8}}>
+                  {csvRows.slice(0,20).map((r,i)=>(
+                    <div key={i} style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,padding:'7px 12px',borderTop:i?'1px solid rgba(255,255,255,0.04)':'none',fontSize:12}}>
+                      <span style={{color:'#fff',fontWeight:500}}>{r.name||'—'}</span>
+                      <span style={{color:'rgba(255,252,246,0.50)'}}>{r.email||'—'}</span>
+                    </div>
+                  ))}
+                  {csvRows.length>20&&<div style={{padding:'6px 12px',fontSize:11,color:'rgba(255,252,246,0.40)'}}>+{csvRows.length-20} more rows</div>}
                 </div>
-              ))}
-              {csvRows.length>20&&<div style={{padding:'6px 12px',fontSize:11,color:'rgba(255,252,246,0.40)'}}>+{csvRows.length-20} more rows</div>}
-            </div>
-            <p style={{fontSize:12,color:'rgba(255,252,246,0.50)',marginBottom:14}}>Expected columns: <code style={{fontFamily:'var(--font-mono)',fontSize:11}}>name, email, rig, city, purchase_date, wheelbase</code></p>
-            {importing&&<div style={{fontSize:12,color:'rgba(255,252,246,0.62)',marginBottom:10}}>Importing… {importDone} / {csvRows.length}</div>}
-            <div className="st-modal-actions"><button className="st-btn-ghost" onClick={()=>setShowCSV(false)} disabled={importing}>Cancel</button><button className="st-btn-primary" onClick={importCSV} disabled={importing||csvRows.length===0}>{importing?<Spin/>:`Import ${csvRows.length} customers`}</button></div>
+                <p style={{fontSize:12,color:'rgba(255,252,246,0.50)',marginBottom:8}}>Expected columns: <code style={{fontFamily:'var(--font-mono)',fontSize:11}}>name, email, rig, purchase_date, wheelbase</code> (password optional).</p>
+                <p style={{fontSize:11,color:'rgba(255,252,246,0.40)',marginBottom:14}}>Customers without a password get a one-time temp password and are asked to set their own on first login.</p>
+                {importing&&<div style={{fontSize:12,color:'rgba(255,252,246,0.62)',marginBottom:10}}>Importing… {importDone} / {csvRows.length}</div>}
+                <div className="st-modal-actions"><button className="st-btn-ghost" onClick={()=>setShowCSV(false)} disabled={importing}>Cancel</button><button className="st-btn-primary" onClick={importCSV} disabled={importing||csvRows.length===0}>{importing?<Spin/>:`Import ${csvRows.length} customers`}</button></div>
+              </>
+            )}
+
+            {importResult&&(
+              <>
+                <div style={{display:'flex',gap:8,marginBottom:14}}>
+                  <div style={{flex:1,padding:'10px 12px',background:'rgba(34,197,94,0.08)',border:'1px solid rgba(34,197,94,0.2)',borderRadius:8}}><div style={{fontSize:22,fontWeight:600,color:'#22c55e'}}>{importResult.created.length}</div><div style={{fontSize:11,color:'rgba(255,252,246,0.62)'}}>Imported</div></div>
+                  <div style={{flex:1,padding:'10px 12px',background:'rgba(245,158,11,0.08)',border:'1px solid rgba(245,158,11,0.2)',borderRadius:8}}><div style={{fontSize:22,fontWeight:600,color:'#f59e0b'}}>{importResult.skipped.length}</div><div style={{fontSize:11,color:'rgba(255,252,246,0.62)'}}>Skipped</div></div>
+                  <div style={{flex:1,padding:'10px 12px',background:'rgba(204,17,34,0.08)',border:'1px solid rgba(204,17,34,0.2)',borderRadius:8}}><div style={{fontSize:22,fontWeight:600,color:'#f8505f'}}>{importResult.failed.length}</div><div style={{fontSize:11,color:'rgba(255,252,246,0.62)'}}>Failed</div></div>
+                </div>
+
+                {importResult.created.length>0&&(
+                  <div style={{marginBottom:12}}>
+                    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:6}}>
+                      <div style={{fontSize:11,fontWeight:600,color:'rgba(255,252,246,0.62)',letterSpacing:'0.06em',textTransform:'uppercase'}}>Temp passwords — copy &amp; share</div>
+                      <button className="st-btn-ghost st-btn-sm" onClick={()=>{const txt=importResult.created.map(c=>`${c.email}\t${c.tempPassword}`).join('\n');navigator.clipboard?.writeText(txt);}}>Copy all</button>
+                    </div>
+                    <div style={{maxHeight:200,overflowY:'auto',background:'rgba(255,255,255,0.02)',border:'1px solid rgba(255,255,255,0.06)',borderRadius:8}}>
+                      {importResult.created.map((c,i)=>(
+                        <div key={i} style={{display:'grid',gridTemplateColumns:'1fr auto',gap:8,padding:'7px 12px',borderTop:i?'1px solid rgba(255,255,255,0.04)':'none',fontSize:12}}>
+                          <span style={{color:'rgba(255,252,246,0.86)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{c.email}</span>
+                          <span className="mono" style={{color:'#fff'}}>{c.tempPassword}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <p style={{fontSize:10.5,color:'rgba(255,252,246,0.40)',marginTop:5}}>Each customer sets their own password on first login. These temp passwords are shown once — copy them now.</p>
+                  </div>
+                )}
+
+                {importResult.skipped.length>0&&(
+                  <div style={{marginBottom:10}}>
+                    <div style={{fontSize:11,fontWeight:600,color:'rgba(255,252,246,0.62)',marginBottom:5}}>Skipped (already exist)</div>
+                    <div style={{fontSize:11,color:'rgba(255,252,246,0.50)',lineHeight:1.6}}>{importResult.skipped.map(s=>s.email).join(', ')}</div>
+                  </div>
+                )}
+                {importResult.failed.length>0&&(
+                  <div style={{marginBottom:10}}>
+                    <div style={{fontSize:11,fontWeight:600,color:'#f8505f',marginBottom:5}}>Failed</div>
+                    <div style={{fontSize:11,color:'rgba(255,252,246,0.50)',lineHeight:1.6}}>{importResult.failed.map(f=>`${f.email} (${f.reason})`).join(', ')}</div>
+                  </div>
+                )}
+                <div className="st-modal-actions"><button className="st-btn-primary" onClick={()=>setShowCSV(false)}>Done</button></div>
+              </>
+            )}
           </div>
         </div>
       )}
