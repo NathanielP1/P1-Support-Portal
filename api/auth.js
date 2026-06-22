@@ -97,6 +97,7 @@ export default async function handler(req, res) {
         email: customer.email,
         specialistName: customer.specialist_name || null,
         specialistEmail: customer.specialist_email || null,
+        mustSetPassword: customer.must_set_password || false,
       }
     });
 
